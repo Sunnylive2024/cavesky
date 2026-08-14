@@ -1,0 +1,357 @@
+{
+  "schemaVersion": "0.1",
+  "id": "SH001",
+  "fps": 24,
+  "durationFrames": 96,
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "backgroundColor": "#000000"
+  },
+  "layers": [
+    {
+      "id": "BG",
+      "role": "background",
+      "order": 0,
+      "locked": true
+    },
+    {
+      "id": "SHADOW",
+      "role": "shadow",
+      "order": 10,
+      "locked": false
+    },
+    {
+      "id": "CONTENT",
+      "role": "content",
+      "order": 20,
+      "locked": false
+    },
+    {
+      "id": "FG",
+      "role": "foreground",
+      "order": 30,
+      "locked": true
+    }
+  ],
+  "elements": [
+    {
+      "id": "BACKGROUND_01",
+      "kind": "background",
+      "assetId": "ASSET_BG_LIVING_ROOM",
+      "layerId": "BG",
+      "activeRange": {
+        "start": 0,
+        "end": 96
+      },
+      "name": "水池场景",
+      "transform": {
+        "x": 0.5,
+        "y": 0.5,
+        "scale": 4.55,
+        "rotation": 0.0
+      },
+      "visible": true,
+      "locked": true,
+      "keyframes": [
+        {
+          "id": "KF_BG_000",
+          "frame": 0,
+          "image": "/source-assets/023b5bb5c9ea15ce36d39af4465b2df33a87e8501480-bkimg-process,v_1,rw_16,rh_9,maxl_504.webp",
+          "mask": null,
+          "instruction": null,
+          "state": {},
+          "locked": true
+        }
+      ]
+    },
+    {
+      "id": "CHAR_01",
+      "kind": "character",
+      "assetId": "ASSET_CHAR_LINA",
+      "layerId": "CONTENT",
+      "activeRange": {
+        "start": 0,
+        "end": 96
+      },
+      "name": "短发女性",
+      "transform": {
+        "x": 0.37788897270263033,
+        "y": 0.4823941083021568,
+        "scale": 1.45,
+        "rotation": 0.0
+      },
+      "visible": true,
+      "locked": false,
+      "keyframes": [
+        {
+          "id": "KF_CHAR_024",
+          "frame": 24,
+          "image": "/source-assets/1b4c510fd9f9d72a461a04e7dc2a2834359bbbc9.jfif",
+          "mask": null,
+          "instruction": "Lina 坐着，右手空闲，视线看向杯子",
+          "state": {
+            "rightHand": "free"
+          },
+          "locked": true
+        },
+        {
+          "id": "KF_CHAR_072",
+          "frame": 72,
+          "image": "/source-assets/1b4c510fd9f9d72a461a04e7dc2a2834359bbbc9.jfif",
+          "mask": null,
+          "instruction": "Lina 右手拿杯子，杯子停在胸前",
+          "state": {
+            "rightHand": "holding:PROP_CUP_01"
+          },
+          "locked": true
+        }
+      ]
+    },
+    {
+      "id": "PROP_CUP_01",
+      "kind": "prop",
+      "assetId": "ASSET_PROP_BLUE_CUP",
+      "layerId": "CONTENT",
+      "activeRange": {
+        "start": 0,
+        "end": 96
+      },
+      "name": "蓝色杯子",
+      "transform": {
+        "x": 0.6124011037217596,
+        "y": 0.6725820736594041,
+        "scale": 0.32,
+        "rotation": 0.0
+      },
+      "visible": true,
+      "locked": false,
+      "keyframes": [
+        {
+          "id": "KF_CUP_024",
+          "frame": 24,
+          "image": "/source-assets/4dc31ddeeaabf0a43bfb84efd7b34ee.jpg",
+          "mask": null,
+          "instruction": null,
+          "state": {
+            "location": "table",
+            "heldBy": null
+          },
+          "locked": true
+        },
+        {
+          "id": "KF_CUP_072",
+          "frame": 72,
+          "image": "/source-assets/4dc31ddeeaabf0a43bfb84efd7b34ee.jpg",
+          "mask": null,
+          "instruction": null,
+          "state": {
+            "location": "CHAR_01.rightHand",
+            "heldBy": "CHAR_01"
+          },
+          "locked": true
+        }
+      ]
+    }
+  ],
+  "interactionGroups": [
+    {
+      "id": "IG_PICKUP_CUP_01",
+      "members": [
+        "CHAR_01",
+        "PROP_CUP_01"
+      ],
+      "range": {
+        "start": 24,
+        "end": 72
+      },
+      "instruction": "Lina 犹豫地伸出右手，自然拿起杯子并停在胸前",
+      "contextPolicy": "referenceOnly",
+      "outputMode": "mergedRgba",
+      "exit": {
+        "mode": "attachToMember",
+        "subjectId": "PROP_CUP_01",
+        "targetId": "CHAR_01",
+        "anchor": "rightHand"
+      },
+      "keyframes": [
+        {
+          "id": "IKF_PICKUP_024",
+          "frame": 24,
+          "image": "/generated-media/9e0896d1f88d41049d3d8cd52a96f77c.png",
+          "mask": "/generated-media/mask-SH001-IG_PICKUP_CUP_01-IKF_PICKUP_024-cd737045.png",
+          "instruction": "女孩坐在桌边，右手空闲并看向桌上的蓝色杯子，杯子仍放在桌面上",
+          "state": {
+            "contact": "none",
+            "cup": "on_table",
+            "generatedComposite": true,
+            "maskSource": "manual"
+          },
+          "locked": true
+        },
+        {
+          "id": "IKF_PICKUP_072",
+          "frame": 72,
+          "image": "/generated-media/a295d85837a844c2aa99270d8caebf54.png",
+          "mask": "/generated-media/mask-SH001-IG_PICKUP_CUP_01-IKF_PICKUP_072-2442a5f9.png",
+          "instruction": "女孩右手自然握住蓝色杯子的杯柄，将杯子稳定拿到胸前，杯子已经离开桌面",
+          "state": {
+            "contact": "grasp",
+            "cup": "held",
+            "generatedComposite": true,
+            "maskSource": "manual"
+          },
+          "locked": true
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "TR_PICKUP_CUP_01",
+      "targetType": "interactionGroup",
+      "targetId": "IG_PICKUP_CUP_01",
+      "fromFrame": 24,
+      "toFrame": 72,
+      "instruction": "犹豫但自然地拿起杯子",
+      "strategy": "auto",
+      "selectedGenerationId": "GEN_C7AC478403"
+    }
+  ],
+  "generations": [
+    {
+      "id": "GEN_RECOVERED_TRANSITION_001",
+      "type": "transition",
+      "transitionId": "TR_PICKUP_CUP_01",
+      "targetId": "IG_PICKUP_CUP_01",
+      "adapter": "wan-kf2v",
+      "outputs": [
+        "/generated-media/9591218e05124a3bb31373481356356f.mp4"
+      ],
+      "status": "accepted",
+      "message": "Recovered completed transition video",
+      "output": "/generated-media/9591218e05124a3bb31373481356356f.mp4"
+    },
+    {
+      "id": "GEN_822B029D9F",
+      "type": "interactionKeyframe",
+      "targetId": "IG_PICKUP_CUP_01",
+      "keyframeId": "IKF_PICKUP_024",
+      "adapter": "qwen-image",
+      "output": "/generated-media/9e0896d1f88d41049d3d8cd52a96f77c.png",
+      "outputs": [
+        "/generated-media/9e0896d1f88d41049d3d8cd52a96f77c.png",
+        "/generated-media/314b73f1bd8843ad91ef71558dd4475e.png"
+      ],
+      "status": "accepted"
+    },
+    {
+      "id": "GEN_75E8DFB435",
+      "type": "interactionKeyframe",
+      "targetId": "IG_PICKUP_CUP_01",
+      "keyframeId": "IKF_PICKUP_072",
+      "adapter": "qwen-image",
+      "outputs": [
+        "/generated-media/78df35bb90894919818da3ddd501249f.png",
+        "/generated-media/07b7567de6f745499f4b8592d91837b2.png"
+      ],
+      "status": "succeeded",
+      "message": "Generated 2 keyframe image(s)"
+    },
+    {
+      "id": "GEN_33C357B08A",
+      "type": "interactionKeyframe",
+      "targetId": "IG_PICKUP_CUP_01",
+      "keyframeId": "IKF_PICKUP_072",
+      "adapter": "qwen-image",
+      "outputs": [
+        "/generated-media/a295d85837a844c2aa99270d8caebf54.png",
+        "/generated-media/da710c21609744749b7810c47f1d2d67.png"
+      ],
+      "status": "accepted",
+      "message": "Generated 2 keyframe image(s)",
+      "output": "/generated-media/a295d85837a844c2aa99270d8caebf54.png",
+      "previousOutput": ""
+    },
+    {
+      "id": "GEN_C48321EA17",
+      "type": "transition",
+      "transitionId": "TR_PICKUP_CUP_01",
+      "targetId": "IG_PICKUP_CUP_01",
+      "adapter": "mock",
+      "outputs": [],
+      "status": "succeeded",
+      "message": "Mock adapter completed transition TR_PICKUP_CUP_01; no media was generated"
+    },
+    {
+      "id": "GEN_9B6FBCF8B0",
+      "type": "transition",
+      "transitionId": "TR_PICKUP_CUP_01",
+      "targetId": "IG_PICKUP_CUP_01",
+      "adapter": "mock",
+      "outputs": [],
+      "status": "succeeded",
+      "message": "Mock adapter completed transition TR_PICKUP_CUP_01; no media was generated"
+    },
+    {
+      "id": "GEN_B0117E2BFE",
+      "type": "transition",
+      "transitionId": "TR_PICKUP_CUP_01",
+      "targetId": "IG_PICKUP_CUP_01",
+      "adapter": "mock",
+      "outputs": [],
+      "status": "succeeded",
+      "message": "Mock adapter completed transition TR_PICKUP_CUP_01; no media was generated"
+    },
+    {
+      "id": "GEN_C7AC478403",
+      "type": "transition",
+      "transitionId": "TR_PICKUP_CUP_01",
+      "targetId": "IG_PICKUP_CUP_01",
+      "adapter": "wan-i2v-2.7",
+      "outputs": [
+        "/generated-media/85ab8f232002411a8ec4885cff657fd8.mp4"
+      ],
+      "status": "accepted",
+      "message": "Wan 2.7 generated a 2s transition video",
+      "output": "/generated-media/85ab8f232002411a8ec4885cff657fd8.mp4",
+      "maskOutput": "/generated-media/video-mask-GEN_C7AC478403-5a9eeee5.mp4",
+      "maskMetadata": {
+        "frames": 60,
+        "width": 320,
+        "height": 180,
+        "fps": "30/1"
+      }
+    },
+    {
+      "id": "GEN_F2C713CD2C",
+      "type": "transition",
+      "transitionId": "TR_PICKUP_CUP_01",
+      "targetId": "IG_PICKUP_CUP_01",
+      "adapter": "mock",
+      "outputs": [],
+      "status": "succeeded",
+      "message": "Mock adapter completed transition TR_PICKUP_CUP_01; no media was generated"
+    },
+    {
+      "id": "GEN_CAB8EF64DC",
+      "type": "transition",
+      "transitionId": "TR_PICKUP_CUP_01",
+      "targetId": "IG_PICKUP_CUP_01",
+      "adapter": "mock",
+      "outputs": [],
+      "status": "succeeded",
+      "message": "Mock adapter completed transition TR_PICKUP_CUP_01; no media was generated"
+    },
+    {
+      "id": "GEN_8EF3F3559B",
+      "type": "transition",
+      "transitionId": "TR_PICKUP_CUP_01",
+      "targetId": "IG_PICKUP_CUP_01",
+      "adapter": "mock",
+      "outputs": [],
+      "status": "succeeded",
+      "message": "Mock adapter completed transition TR_PICKUP_CUP_01; no media was generated"
+    }
+  ]
+}

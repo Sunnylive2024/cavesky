@@ -1,0 +1,25 @@
+[project]
+name = "cavesky"
+version = "0.1.0"
+description = "Local-first generative animation studio"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "pydantic>=2.10,<3",
+  "uvicorn[standard]>=0.34,<1"
+  ,"python-multipart>=0.0.20,<1"
+]
+
+[project.optional-dependencies]
+dev = ["httpx>=0.28,<1"]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["cavesky*"]
+exclude = ["apps*", "docs*", "examples*", "tests*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

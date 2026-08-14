@@ -1,0 +1,13 @@
+{
+  "name": "cavesky",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.16.0",
+  "scripts": {
+    "dev": "pnpm --filter @cavesky/editor dev",
+    "build": "pnpm --filter @cavesky/editor build",
+    "typecheck": "pnpm --filter @cavesky/editor typecheck",
+    "test": "python -m unittest discover -s tests -v"
+  }
+}
+
