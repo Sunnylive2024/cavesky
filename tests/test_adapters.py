@@ -1,6 +1,7 @@
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from cavesky.adapters import (
     AdapterNotFoundError,
@@ -83,6 +84,67 @@ class AliyunAdapterTests(unittest.TestCase):
             width=1280,
             height=720,
         )
+
+
+class QwenImageReferenceTests(unittest.TestCase):
+    def _adapter(self, root: Path) -> QwenImageAdapter:
+        return QwenImageAdapter(root=root, base_url="https://example.test/api/v1", api_key="secret", model="wan2.7-image")
+
+    def test_capability_reports_reference_support(self) -> None:
+        with TemporaryDirectory() as directory:
+            capability = self._adapter(Path(directory)).capability
+            self.assertTrue(capability.supportsImageReference)
+            self.assertEqual(capability.maxReferenceImages, 3)
+            self.assertTrue(capability.cameraLockIsSoftHint)
+
+    def test_coerce_string_reference_is_timeless(self) -> None:
+        reference = QwenImageAdapter._coerce_reference("data:image/png;base64,AAAA", 0)
+        self.assertEqual(reference.relation.value, "timeless")
+        self.assertEqual(reference.image, "data:image/png;base64,AAAA")
+
+    def test_role_references_become_multimodal_content(self) -> None:
+        with TemporaryDirectory() as directory:
+            adapter = self._adapter(Path(directory))
+            task = TransitionTask(
+                shotId="SH001", transitionId="TR001", targetType="interactionGroup", targetId="IG001",
+                instruction="伸手拿杯", fromFrame=0, toFrame=24, fps=24, width=1280, height=720,
+                parameters={"references": [{"frame": 24, "relation": "before", "purpose": "continuity", "image": "data:image/png;base64,AAAA"}], "n": 1},
+            )
+            captured: dict[str, object] = {}
+
+            def fake_request_json(method, path, payload, **kwargs):
+                captured["payload"] = payload
+                return {"output": {"choices": [{"message": {"content": [{"image": "https://example/x.png"}]}}]}}
+
+            with patch.object(adapter, "_request_json", side_effect=fake_request_json), patch.object(adapter, "_download", return_value=Path(directory) / "out.png"):
+                result = adapter.run_transition(task)
+            self.assertIsNone(result.error)
+            content = captured["payload"]["input"]["messages"][0]["content"]  # type: ignore[index]
+            texts = [item["text"] for item in content if "text" in item]  # type: ignore[index]
+            self.assertIn("目标状态之前的已确认关键状态", texts[0])
+
+    def test_rejects_too_many_references(self) -> None:
+        with TemporaryDirectory() as directory:
+            adapter = self._adapter(Path(directory))
+            references = [{"relation": "timeless", "purpose": "continuity", "image": "data:image/png;base64,AAAA"} for _ in range(4)]
+            task = TransitionTask(
+                shotId="SH001", transitionId="TR001", targetType="interactionGroup", targetId="IG001",
+                instruction="x", fromFrame=0, toFrame=24, fps=24, width=1280, height=720,
+                parameters={"references": references},
+            )
+            result = adapter.run_transition(task)
+            self.assertEqual(result.error.code, "too_many_references")
+
+    def test_legacy_images_do_not_crash(self) -> None:
+        with TemporaryDirectory() as directory:
+            adapter = QwenImageAdapter(root=Path(directory), base_url="https://example.test/api/v1", api_key=None, model="wan2.7-image")
+            task = TransitionTask(
+                shotId="SH001", transitionId="TR001", targetType="interactionGroup", targetId="IG001",
+                instruction="x", fromFrame=0, toFrame=24, fps=24, width=1280, height=720,
+                parameters={"images": ["data:image/png;base64,AAAA"]},
+            )
+            result = adapter.run_transition(task)
+            self.assertEqual(result.error.code, "not_configured")
 
 
 if __name__ == "__main__":

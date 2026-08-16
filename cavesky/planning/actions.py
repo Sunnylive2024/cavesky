@@ -4,6 +4,7 @@ from uuid import uuid4
 import json
 
 from ..models import FrameRange, InteractionExit, InteractionGroup, Shot, Transition, VisualKeyframe
+from ..prompting import compile_camera_continuity_prompt
 from .models import PlanProposal
 
 
@@ -15,6 +16,8 @@ def create_action_group(
     proposal: PlanProposal,
     action_intent: str,
     target_end_frame: int,
+    camera_mode: str = "prefer",
+    camera_instruction: str | None = None,
 ) -> tuple[Shot, str]:
     """Materialize a planner proposal into an interaction group anchored to a keyframe.
 
@@ -68,6 +71,7 @@ def create_action_group(
                 "phase":step.phase,
                 "holdFrames":step.holdFrames,
                 "continuity":step.continuity.model_dump(),
+                **({"framing": step.framing.model_dump()} if step.framing else {}),
             },
             locked=False,
             renderPolicy="required" if step is remaining[-1] else "optional",
@@ -89,6 +93,8 @@ def create_action_group(
             instruction=action_intent,
             contextPolicy="referenceOnly",
             outputMode="mergedRgba",
+            cameraMode=camera_mode,
+            cameraInstruction=camera_instruction,
             exit=InteractionExit(mode="restoreIndependent"),
             keyframes=keyframes,
         )
@@ -98,7 +104,13 @@ def create_action_group(
     return shot, group_id
 
 
-def compile_action_group_prompt(anchor: VisualKeyframe, keyframes: list[VisualKeyframe], action_intent: str) -> str:
+def compile_action_group_prompt(
+    anchor: VisualKeyframe,
+    keyframes: list[VisualKeyframe],
+    action_intent: str,
+    camera_mode: str = "prefer",
+    camera_instruction: str | None = None,
+) -> str:
     ordered = [anchor, *sorted(keyframes, key=lambda item: item.frame)]
     total = max(1, ordered[-1].frame - anchor.frame)
     states: list[str] = []
@@ -109,8 +121,11 @@ def compile_action_group_prompt(anchor: VisualKeyframe, keyframes: list[VisualKe
         hold = int(state.get("holdFrames", 0) or 0)
         transition = state.get("transitionToNext") or ("进入动作" if index == 0 else "")
         continuity = state.get("continuity", {})
-        states.append(f"{relative:.0%}（{phase}）：{keyframe.instruction or '未描述状态'}；到下一状态：{transition or '无'}；保持 {hold} 帧；连续性：{json.dumps(continuity, ensure_ascii=False, sort_keys=True)}")
-    return f"动作意图：{action_intent}。按相对时间推进：" + "；".join(states) + "。固定人物身份、左右手、朝向、物体归属、接触/支撑关系、背景与机位。"
+        framing = state.get("framing", {})
+        framing_text = f"；画面：{json.dumps(framing, ensure_ascii=False, sort_keys=True)}" if framing else ""
+        states.append(f"{relative:.0%}（{phase}）：{keyframe.instruction or '未描述状态'}；到下一状态：{transition or '无'}；保持 {hold} 帧；连续性：{json.dumps(continuity, ensure_ascii=False, sort_keys=True)}{framing_text}")
+    camera = compile_camera_continuity_prompt(camera_mode, camera_instruction)
+    return f"动作意图：{action_intent}。按相对时间推进：" + "；".join(states) + "。保持人物身份、左右手、朝向、物体归属、接触/支撑关系和背景连续。" + camera
 
 
 def sync_action_group_transitions(shot: Shot, group_id: str) -> list[Transition]:
@@ -141,7 +156,7 @@ def sync_action_group_transitions(shot: Shot, group_id: str) -> list[Transition]
                 targetId=group.id,
                 fromFrame=start.frame,
                 toFrame=end.frame,
-                instruction=compile_action_group_prompt(start, guiding, group.instruction),
+                instruction=compile_action_group_prompt(start, guiding, group.instruction, group.cameraMode, group.cameraInstruction),
                 strategy="aiVideo",
                 selectedGenerationId=old.selectedGenerationId if old else None,
             )

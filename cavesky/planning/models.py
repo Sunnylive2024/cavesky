@@ -5,12 +5,14 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 from ..models import FrameRange
+from ..references import CameraContinuityMode
 
 
 class PlannerCapability(BaseModel):
     id: str
     label: str
     configured: bool = True
+    supportsVision: bool = False
 
 
 class ElementContext(BaseModel):
@@ -20,6 +22,14 @@ class ElementContext(BaseModel):
     kind: str
     name: str | None = None
     activeRange: FrameRange
+
+
+class AnchorFrameVisual(BaseModel):
+    """A provider-neutral anchor keyframe image reference and its dimensions."""
+
+    image: str
+    width: int | None = None
+    height: int | None = None
 
 
 class PlanRequest(BaseModel):
@@ -36,6 +46,9 @@ class PlanRequest(BaseModel):
     anchorDescription: str
     actionIntent: str
     embellishment: float = Field(default=0.3, ge=0, le=1)
+    cameraMode: CameraContinuityMode = CameraContinuityMode.PREFER
+    cameraInstruction: str | None = None
+    anchorImages: list[AnchorFrameVisual] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validates_backend_scope(self) -> "PlanRequest":
@@ -43,6 +56,8 @@ class PlanRequest(BaseModel):
             raise ValueError("targetEndFrame must follow anchorFrame")
         if self.targetEndFrame > self.durationFrames:
             raise ValueError("targetEndFrame exceeds shot duration")
+        if self.cameraMode == CameraContinuityMode.DIRECTED and not (self.cameraInstruction or "").strip():
+            raise ValueError("directed camera mode requires a camera instruction")
         return self
 
 
@@ -57,6 +72,7 @@ class PlanStep(BaseModel):
     phase: Literal["preparation", "main", "completion", "hold"]
     holdFrames: int = Field(default=0, ge=0, le=120)
     continuity: "ContinuityState" = Field(default_factory=lambda: ContinuityState())
+    framing: "FramingState | None" = None
 
 
 class ContinuityState(BaseModel):
@@ -66,6 +82,14 @@ class ContinuityState(BaseModel):
     contacts: list[str] = Field(default_factory=list)
     supports: list[str] = Field(default_factory=list)
     wearables: list[str] = Field(default_factory=list)
+
+
+class FramingState(BaseModel):
+    """Model-suggested, qualitative on-screen framing (never precise camera millimetres)."""
+
+    screenPosition: Literal["left", "center", "right", "unknown"] = "unknown"
+    bodyAnchor: Literal["feet", "knees", "hips", "chest", "head", "unknown"] = "unknown"
+    framingRisk: Literal["none", "clipping", "cutoff", "unknown"] = "none"
 
 
 class PlanProposal(BaseModel):

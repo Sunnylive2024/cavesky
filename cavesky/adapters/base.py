@@ -13,6 +13,9 @@ class AdapterCapability(BaseModel):
     kinds: list[str]
     supportsMasks: bool = False
     supportsFirstLastFrame: bool = False
+    supportsImageReference: bool = False
+    maxReferenceImages: int = Field(default=3, ge=1)
+    cameraLockIsSoftHint: bool = True
     configured: bool = True
 
 

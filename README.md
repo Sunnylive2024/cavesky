@@ -128,12 +128,12 @@ CAVESKY_WAN_27_VIDEO_MODEL=wan2.7-i2v-2026-04-25
 
 CAVESKY_PLANNER_BASE_URL=https://你的业务空间域名.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
 CAVESKY_PLANNER_API_KEY=你的动作规划Key
-CAVESKY_PLANNER_MODEL=qwen-flash
+CAVESKY_PLANNER_MODEL=qwen3.6-flash
 ```
 
 图像和视频使用业务空间专属 DashScope `/api/v1` 地址；动作规划使用同一业务空间的 `/compatible-mode/v1` 地址。两种地址不能互换。
 
-如果同一业务空间的 Key 拥有 `wan2.7-image`、`wan2.7-i2v-2026-04-25` 和 `qwen-flash` 权限，一个实际 Key 可以同时填入三个 Key 变量；也可以分开创建以便统计和轮换。业务空间是模型权限、额度、Key 和调用记录的隔离范围，不需要把“默认业务空间”文字写进请求。
+如果同一业务空间的 Key 拥有 `wan2.7-image`、`wan2.7-i2v-2026-04-25` 和 `qwen3.6-flash` 权限，一个实际 Key 可以同时填入三个 Key 变量；也可以分开创建以便统计和轮换。业务空间是模型权限、额度、Key 和调用记录的隔离范围，不需要把“默认业务空间”文字写进请求。
 
 `.env` 会由后端加载，前端永远不应读取这些值。云端返回的临时媒体会立即缓存到 `work/generations/`，因此刷新页面后仍可查看已经付费生成的历史候选。
 
@@ -158,8 +158,10 @@ CAVESKY_WAN_27_VIDEO_MODEL=wan2.7-i2v-2026-04-25
 ```dotenv
 CAVESKY_PLANNER_BASE_URL=https://你的业务空间域名.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
 CAVESKY_PLANNER_API_KEY=你的Key
-CAVESKY_PLANNER_MODEL=qwen-flash
+CAVESKY_PLANNER_MODEL=qwen3.6-flash
 ```
+
+`qwen3.6-flash` 支持视觉输入，能读取锚点关键帧图片判断站姿、占画比例和空间锚点。旧的 `qwen-flash` 为纯文本模型，遇到携带锚点图片的规划请求会返回明确错误，而不是静默丢弃图片。
 
 未配置云端 Planner 时仍可选择 `mock` 做无费用测试。密钥规则与图像、视频模型相同：仅后端可见。
 

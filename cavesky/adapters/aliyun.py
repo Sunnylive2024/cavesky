@@ -10,7 +10,10 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 from uuid import uuid4
 
+from ..media import is_remote_or_data, resolve_media_path
 from ..models import GenerationError, GenerationOutput
+from ..prompting import compile_reference_role_text
+from ..references import KeyframeReference
 from .base import AdapterCapability, AdapterResult, GenerationAdapter, TransitionTask
 
 
@@ -76,14 +79,12 @@ class AliyunAdapterBase(GenerationAdapter):
     def _image_value(self, value: object, parameter_name: str) -> str:
         if not isinstance(value, str) or not value:
             raise AliyunApiError("missing_input", f"{parameter_name} is required")
-        if value.startswith(("https://", "http://", "data:image/", "oss://")):
+        if is_remote_or_data(value):
             return value
-        candidate = Path(value)
-        if not candidate.is_absolute():
-            candidate = self.root / candidate
-        resolved = candidate.resolve()
-        if resolved != self.root and self.root not in resolved.parents:
-            raise AliyunApiError("invalid_input_path", f"{parameter_name} must be inside the workspace")
+        try:
+            resolved = resolve_media_path(self.root, value)
+        except ValueError as error:
+            raise AliyunApiError("invalid_input_path", str(error)) from error
         if not resolved.is_file():
             raise AliyunApiError("missing_input", f"{parameter_name} file does not exist")
         if resolved.stat().st_size > 10 * 1024 * 1024:
@@ -124,17 +125,34 @@ class QwenImageAdapter(AliyunAdapterBase):
             kinds=["keyframeImage"],
             supportsMasks=False,
             supportsFirstLastFrame=False,
+            supportsImageReference=True,
+            maxReferenceImages=3,
+            cameraLockIsSoftHint=True,
             configured=bool(self.api_key and self.base_url),
         )
 
     def run_transition(self, task: TransitionTask) -> AdapterResult:
         try:
             content: list[dict[str, str]] = []
-            raw_images = task.parameters.get("images", [])
-            if raw_images is not None and not isinstance(raw_images, list):
-                raise AliyunApiError("invalid_input", "images must be a list")
-            for index, image in enumerate(raw_images or []):
-                content.append({"image": self._image_value(image, f"images[{index}]")})
+            references = task.parameters.get("references")
+            raw_images = task.parameters.get("images")
+            if references is not None:
+                if not isinstance(references, list):
+                    raise AliyunApiError("invalid_input", "references must be a list")
+                if len(references) > self.capability.maxReferenceImages:
+                    raise AliyunApiError(
+                        "too_many_references",
+                        f"adapter accepts at most {self.capability.maxReferenceImages} reference images",
+                    )
+                for index, raw in enumerate(references):
+                    reference = self._coerce_reference(raw, index)
+                    content.append({"text": compile_reference_role_text(reference)})
+                    content.append({"image": self._image_value(reference.image, f"references[{index}].image")})
+            elif raw_images is not None:
+                if not isinstance(raw_images, list):
+                    raise AliyunApiError("invalid_input", "images must be a list")
+                for index, image in enumerate(raw_images or []):
+                    content.append({"image": self._image_value(image, f"images[{index}]")})
             content.append({"text": task.instruction})
             parameters: dict[str, object] = {
                 "prompt_extend": bool(task.parameters.get("promptExtend", False)),
@@ -166,6 +184,15 @@ class QwenImageAdapter(AliyunAdapterBase):
             return AdapterResult(outputs=outputs, message=f"Generated {len(outputs)} keyframe image(s)")
         except AliyunApiError as error:
             return self._error_result(error)
+
+    @staticmethod
+    def _coerce_reference(raw: object, index: int) -> KeyframeReference:
+        if isinstance(raw, str):
+            # Legacy bare image: treat as a generic timeless reference.
+            return KeyframeReference(relation="timeless", purpose="continuity", image=raw)
+        if isinstance(raw, dict):
+            return KeyframeReference.model_validate(raw)
+        raise AliyunApiError("invalid_input", f"references[{index}] must be an object or image string")
 
 
 class WanKeyframeVideoAdapter(AliyunAdapterBase):

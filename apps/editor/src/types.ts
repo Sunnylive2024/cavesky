@@ -9,7 +9,7 @@ export interface Element {
   activeRange: FrameRange; transform: Transform; visible: boolean; locked: boolean; keyframes: VisualKeyframe[];
 }
 export interface InteractionExit { mode:"restoreIndependent"|"keepMerged"|"attachToMember"|"hideMember"; subjectId?:string|null; targetId?:string|null; anchor?:string|null }
-export interface InteractionGroup { id: string; kind:"action"|"interaction"; members: string[]; anchorKeyframeId: string; range: FrameRange; instruction: string; contextPolicy: "referenceOnly"; outputMode: "mergedRgba" | "rgbWithMask"; exit:InteractionExit; keyframes: VisualKeyframe[] }
+export interface InteractionGroup { id: string; kind:"action"|"interaction"; members: string[]; anchorKeyframeId: string; range: FrameRange; instruction: string; contextPolicy: "referenceOnly"; outputMode: "mergedRgba" | "rgbWithMask"; cameraMode: CameraContinuityMode; cameraInstruction?: string | null; exit:InteractionExit; keyframes: VisualKeyframe[] }
 export interface Transition { id: string; targetType: "element" | "interactionGroup"; targetId: string; fromFrame: number; toFrame: number; instruction: string; strategy: string; selectedGenerationId?: string | null }
 export interface GenerationRecord { id: string; type: "keyframe" | "interactionKeyframe" | "transition"; targetId?: string | null; keyframeId?: string | null; transitionId?: string | null; adapter: string; outputs?: string[]; output?: string; maskOutput?: string; status: string; message?: string; qualityReview?:Record<string,unknown> }
 export interface Shot {
@@ -26,5 +26,14 @@ export interface GenerationJob {
   outputs: GenerationOutput[]; error?: { code: string; message: string; retryable: boolean } | null;
 }
 export interface GenerationQuote { fingerprint:string; adapter:string; timelineSeconds:number; requestSeconds:number; segmentCount:number; estimatedCostCny?:number|null; durationRatio:number; durationWarning:boolean; playbackSpeedRatio:number; finalPrompt:string }
-export interface AdapterCapability { id:string; label:string; kinds:string[]; supportsMasks:boolean; supportsFirstLastFrame:boolean; configured:boolean }
-export interface PlannerCapability { id:string; label:string; configured:boolean }
+export interface AdapterCapability { id:string; label:string; kinds:string[]; supportsMasks:boolean; supportsFirstLastFrame:boolean; supportsImageReference:boolean; maxReferenceImages:number; configured:boolean }
+export interface PlannerCapability { id:string; label:string; configured:boolean; supportsVision:boolean }
+
+export type CameraContinuityMode = "free" | "prefer" | "lock" | "directed";
+export type ReferenceSelectionMode = "auto" | "none" | "previous" | "next" | "both";
+export type ReferenceRelation = "before" | "after" | "same" | "timeless";
+export type ReferencePurpose = "continuity" | "scene" | "identity" | "objectIdentity";
+export interface KeyframeReference { frame?: number | null; relation: ReferenceRelation; purpose: ReferencePurpose; image: string; targetId?: string | null }
+export interface KeyframeReferenceCandidate { keyframeId: string; frame: number; relation: "before" | "after"; image: string }
+export interface KeyframeReferencePreview { references: KeyframeReference[]; directions: string[]; candidates: KeyframeReferenceCandidate[]; warnings: string[] }
+export interface KeyframeGenerationQuote { adapter: string; finalInstruction: string; negativePrompt: string; references: KeyframeReference[]; candidateCount: number; estimatedCost: null }

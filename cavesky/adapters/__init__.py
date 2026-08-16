@@ -1,6 +1,6 @@
 from .base import AdapterCapability, AdapterResult, GenerationAdapter, TransitionTask
 from .aliyun import QwenImageAdapter, Wan27ImageToVideoAdapter, WanKeyframeVideoAdapter, load_local_env
-from .mock import MockGenerationAdapter
+from .mock import MockGenerationAdapter, MockImageAdapter
 from .registry import AdapterNotFoundError, AdapterRegistry
 
 __all__ = [
@@ -10,6 +10,7 @@ __all__ = [
     "AdapterResult",
     "GenerationAdapter",
     "MockGenerationAdapter",
+    "MockImageAdapter",
     "QwenImageAdapter",
     "TransitionTask",
     "WanKeyframeVideoAdapter",

@@ -16,6 +16,7 @@ from .adapters import (
     AdapterNotFoundError,
     AdapterRegistry,
     MockGenerationAdapter,
+    MockImageAdapter,
     QwenImageAdapter,
     TransitionTask,
     Wan27ImageToVideoAdapter,
@@ -27,6 +28,7 @@ from .models import Canvas, GenerationJob, GenerationRequest, Layer, Shot
 from .repository import ShotRepository
 from .segmentation import LocalSam2Segmenter, VideoMaskPropagator
 from .planning import (
+    AnchorFrameVisual,
     ElementContext,
     MockPlanner,
     OpenAICompatPlanner,
@@ -38,6 +40,17 @@ from .planning import (
     PlannerRegistry,
     compile_action_group_prompt,
     create_action_group,
+)
+from .prompting import compile_keyframe_instruction, compile_negative_prompt
+from .references import (
+    CameraContinuityMode,
+    KeyframeReference,
+    ReferencePurpose,
+    ReferenceRelation,
+    ReferenceSelectionMode,
+    available_continuity_directions,
+    continuity_candidates,
+    resolve_continuity_references,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -59,6 +72,7 @@ aliyun_base_url = os.getenv(
 adapters = AdapterRegistry(
     [
         MockGenerationAdapter(),
+        MockImageAdapter(),
         QwenImageAdapter(
             root=ROOT,
             base_url=aliyun_base_url,
@@ -94,7 +108,8 @@ planners = PlannerRegistry(
         OpenAICompatPlanner(
             base_url=os.getenv("CAVESKY_PLANNER_BASE_URL"),
             api_key=os.getenv("CAVESKY_PLANNER_API_KEY"),
-            model=os.getenv("CAVESKY_PLANNER_MODEL", "qwen-flash"),
+            model=os.getenv("CAVESKY_PLANNER_MODEL", "qwen3.6-flash"),
+            root=ROOT,
         ),
     ]
 )
@@ -126,9 +141,23 @@ class KeyframeGenerationRequest(BaseModel):
     keyframeId: str
     instruction: str
     referenceImages: list[str] = Field(default_factory=list)
+    references: list[KeyframeReference] = Field(default_factory=list)
+    referenceMode: str = "auto"
+    manualReferenceIds: list[str] = Field(default_factory=list)
+    cameraMode: str = "prefer"
+    cameraInstruction: str | None = None
     candidateCount: int = 2
     promptExtend: bool = False
     adapter: str = "wan-image"
+
+
+class KeyframeReferencePreviewRequest(BaseModel):
+    shotId: str
+    targetType: str
+    targetId: str
+    keyframeId: str
+    referenceMode: str = "auto"
+    manualReferenceIds: list[str] = Field(default_factory=list)
 
 
 class AcceptKeyframeGenerationRequest(BaseModel):
@@ -191,6 +220,8 @@ class ActionGroupRequest(BaseModel):
     planner: str = "mock"
     embellishment: float = Field(default=0.3, ge=0, le=1)
     desiredDurationFrames: int | None = Field(default=None, gt=0)
+    cameraMode: str = "prefer"
+    cameraInstruction: str | None = None
 
 @app.get("/api/segmentation/status")
 def segmentation_status(): return segmenter.status()
@@ -520,7 +551,7 @@ def generation_quote(shot: Shot, transition, request: GenerationRequest) -> dict
         anchor = find_keyframe_at(shot, group, transition.fromFrame)
         guiding = [item for item in group.keyframes if transition.fromFrame < item.frame <= transition.toFrame]
         if anchor:
-            final_prompt = compile_action_group_prompt(anchor, guiding, group.instruction)
+            final_prompt = compile_action_group_prompt(anchor, guiding, group.instruction, group.cameraMode, group.cameraInstruction)
             transition.instruction = final_prompt
     fingerprint_payload = {"shotId":shot.id,"transitionId":transition.id,"adapter":request.adapter,"parameters":request.parameters,"instruction":final_prompt}
     fingerprint = hashlib.sha256(json.dumps(fingerprint_payload,ensure_ascii=False,sort_keys=True,separators=(",",":")).encode("utf-8")).hexdigest()
@@ -543,57 +574,152 @@ def quote_generation(request: GenerationRequest) -> dict[str, object]:
     return generation_quote(shot,transition,request)
 
 
-@app.post("/api/keyframe-generations", response_model=GenerationJob, status_code=202)
-def create_keyframe_generation(request: KeyframeGenerationRequest, background_tasks: BackgroundTasks) -> GenerationJob:
-    try:
-        shot = repository.get(request.shotId)
-    except FileNotFoundError as error:
-        raise HTTPException(status_code=404, detail="Shot not found") from error
-    if request.targetType == "interactionGroup":
-        target = next((item for item in shot.interactionGroups if item.id == request.targetId), None)
-    elif request.targetType == "element":
-        target = next((item for item in shot.elements if item.id == request.targetId), None)
+def _keyframe_target(shot: Shot, target_type: str, target_id: str, keyframe_id: str):
+    if target_type == "interactionGroup":
+        target = next((item for item in shot.interactionGroups if item.id == target_id), None)
+    elif target_type == "element":
+        target = next((item for item in shot.elements if item.id == target_id), None)
     else:
         raise HTTPException(status_code=422, detail="Unsupported keyframe target type")
     if target is None:
         raise HTTPException(status_code=422, detail="Keyframe target not found in shot")
-    keyframe = next((item for item in target.keyframes if item.id == request.keyframeId), None)
+    keyframe = next((item for item in target.keyframes if item.id == keyframe_id), None)
     if keyframe is None:
         raise HTTPException(status_code=422, detail="Keyframe not found in interaction group")
+    return target, keyframe
+
+
+def _validate_camera_mode(camera_mode: str, camera_instruction: str | None) -> str:
+    modes = {mode.value for mode in CameraContinuityMode}
+    if camera_mode not in modes:
+        raise HTTPException(status_code=422, detail="Unknown camera continuity mode")
+    if camera_mode == CameraContinuityMode.DIRECTED.value and not (camera_instruction or "").strip():
+        raise HTTPException(status_code=422, detail="指定机位变化需要填写机位指令")
+    return camera_mode
+
+
+@app.post("/api/keyframe-generations/references")
+def preview_keyframe_references(request: KeyframeReferencePreviewRequest) -> dict[str, object]:
+    try:
+        shot = repository.get(request.shotId)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Shot not found") from error
+    target, keyframe = _keyframe_target(shot, request.targetType, request.targetId, request.keyframeId)
+    mode = request.referenceMode
+    if mode not in {item.value for item in ReferenceSelectionMode}:
+        raise HTTPException(status_code=422, detail="Unknown reference selection mode")
+    directions = available_continuity_directions(shot, target, keyframe.frame)
+    references = resolve_continuity_references(shot, target, keyframe.frame, mode, request.manualReferenceIds or None)
+    warnings: list[str] = []
+    if mode == "next" and "after" not in directions:
+        warnings.append("目标状态之后没有已确认图片，无法使用“后一状态”参考")
+    if mode == "previous" and "before" not in directions:
+        warnings.append("目标状态之前没有已确认图片，无法使用“前一状态”参考")
+    if mode == "both":
+        if "before" not in directions:
+            warnings.append("目标状态之前没有已确认图片，无法使用“前后状态”参考")
+        if "after" not in directions:
+            warnings.append("目标状态之后没有已确认图片，无法使用“前后状态”参考")
+    return {
+        "references": [reference.model_dump() for reference in references],
+        "directions": sorted(directions),
+        "candidates": continuity_candidates(shot, target, keyframe.frame),
+        "warnings": warnings,
+    }
+
+
+def _prepare_keyframe_generation(shot: Shot, request: KeyframeGenerationRequest):
+    target, keyframe = _keyframe_target(shot, request.targetType, request.targetId, request.keyframeId)
     if not request.instruction.strip():
         raise HTTPException(status_code=422, detail="Keyframe instruction is required")
-    if len(request.referenceImages) > 3:
-        raise HTTPException(status_code=422, detail="Keyframe image model accepts at most three reference images")
+    _validate_camera_mode(request.cameraMode, request.cameraInstruction)
+    if request.referenceMode not in {item.value for item in ReferenceSelectionMode}:
+        raise HTTPException(status_code=422, detail="Unknown reference selection mode")
     try:
         selected_adapter = adapters.get(request.adapter)
     except AdapterNotFoundError as error:
         raise HTTPException(status_code=422, detail="Keyframe image adapter is not available") from error
     if "keyframeImage" not in selected_adapter.capability.kinds:
         raise HTTPException(status_code=422, detail="Selected adapter does not generate keyframe images")
+
+    max_references = selected_adapter.capability.maxReferenceImages
+    if request.referenceImages and not request.references and not request.manualReferenceIds:
+        if len(request.referenceImages) > max_references:
+            raise HTTPException(status_code=422, detail=f"参考图数量超过模型上限 {max_references} 张")
+        resolved_references = [KeyframeReference(relation="timeless", purpose="continuity", image=image) for image in request.referenceImages]
+    else:
+        continuity = resolve_continuity_references(shot, target, keyframe.frame, request.referenceMode, request.manualReferenceIds or None)
+        if request.referenceMode == "next" and not continuity:
+            raise HTTPException(status_code=422, detail="选择“后一状态”参考，但目标状态之后没有已确认图片")
+        if request.referenceMode == "previous" and not continuity:
+            raise HTTPException(status_code=422, detail="选择“前一状态”参考，但目标状态之前没有已确认图片")
+        if request.referenceMode == "both":
+            relations = {reference.relation for reference in continuity}
+            if not {ReferenceRelation.BEFORE, ReferenceRelation.AFTER}.issubset(relations):
+                raise HTTPException(status_code=422, detail="选择“前后状态”参考需要目标状态前后各有一张已确认图片")
+        if len(continuity) > max_references:
+            raise HTTPException(status_code=422, detail=f"连续性参考超过模型上限 {max_references} 张")
+        extras = [reference for reference in request.references if reference.purpose != ReferencePurpose.CONTINUITY]
+        resolved_references = continuity + extras[: max_references - len(continuity)]
+
+    interaction = request.targetType == "interactionGroup"
+    final_instruction = compile_keyframe_instruction(
+        request.instruction.strip(),
+        resolved_references,
+        request.cameraMode,
+        request.cameraInstruction,
+        interaction=interaction,
+    )
+    negative_prompt = compile_negative_prompt(request.cameraMode)
+    return target, keyframe, final_instruction, negative_prompt, resolved_references
+
+
+@app.post("/api/keyframe-generations/quote")
+def quote_keyframe_generation(request: KeyframeGenerationRequest) -> dict[str, object]:
+    try:
+        shot = repository.get(request.shotId)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Shot not found") from error
+    _, _, final_instruction, negative_prompt, resolved_references = _prepare_keyframe_generation(shot, request)
+    return {
+        "adapter": request.adapter,
+        "finalInstruction": final_instruction,
+        "negativePrompt": negative_prompt,
+        "references": [reference.model_dump() for reference in resolved_references],
+        "candidateCount": max(1, min(request.candidateCount, 6)),
+        "estimatedCost": None,
+    }
+
+
+@app.post("/api/keyframe-generations", response_model=GenerationJob, status_code=202)
+def create_keyframe_generation(request: KeyframeGenerationRequest, background_tasks: BackgroundTasks) -> GenerationJob:
+    try:
+        shot = repository.get(request.shotId)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Shot not found") from error
+    target, keyframe, final_instruction, negative_prompt, resolved_references = _prepare_keyframe_generation(shot, request)
     if request.targetType == "interactionGroup":
         job = jobs.create_interaction_keyframe(shot_id=shot.id, group_id=target.id, keyframe_id=keyframe.id, adapter=request.adapter)
         target_type = "interactionGroup"
-        preservation = "这是同一镜头中人物与物品的联合关键状态。严格保持身份、服装、物品外观、二维画风、色板、固定机位、构图和未提及内容不变；只改变交互成员完成目标所必需的姿态和接触关系："
     else:
         job = jobs.create_keyframe(shot_id=shot.id, element_id=target.id, keyframe_id=keyframe.id, adapter=request.adapter)
         target_type = "element"
-        preservation = "这是同一镜头中单个元素的关键状态编辑。严格保持身份、服装、二维画风、色板、固定机位、背景及其他元素不变；只改变目标元素完成以下状态所必需的内容："
     task = TransitionTask(
         shotId=shot.id,
         transitionId=keyframe.id,
         targetType=target_type,
         targetId=target.id,
-        instruction=f"{preservation}{request.instruction.strip()}",
+        instruction=final_instruction,
         fromFrame=keyframe.frame,
         toFrame=max(keyframe.frame + 1, 1),
         fps=shot.fps,
         width=shot.canvas.width,
         height=shot.canvas.height,
         parameters={
-            "images": request.referenceImages,
+            "references": [reference.model_dump() for reference in resolved_references],
             "n": max(1, min(request.candidateCount, 6)),
             "promptExtend": request.promptExtend,
-            "negativePrompt": "画风变化，身份变化，服装变化，背景变化，多余人物，多余物体，多余手指，手部畸形，物体复制，镜头变化",
+            "negativePrompt": negative_prompt,
         },
     )
     background_tasks.add_task(jobs.run, job.id, task, adapters)
@@ -744,7 +870,16 @@ def suggest_action_duration_frames(action_intent: str, fps: int) -> int:
     return round(fps * (3 if complexity >= 2 else 2))
 
 
-def build_plan_request(shot: Shot, anchor_keyframe, member_ids: list[str], action_intent: str, embellishment: float = 0.3, desired_duration_frames: int | None = None) -> PlanRequest:
+def build_plan_request(
+    shot: Shot,
+    anchor_keyframe,
+    member_ids: list[str],
+    action_intent: str,
+    embellishment: float = 0.3,
+    desired_duration_frames: int | None = None,
+    camera_mode: str = "prefer",
+    camera_instruction: str | None = None,
+) -> PlanRequest:
     elements_by_id = {element.id: element for element in shot.elements}
     members = [elements_by_id[member_id] for member_id in member_ids if member_id in elements_by_id]
     desired = desired_duration_frames or suggest_action_duration_frames(action_intent, shot.fps)
@@ -767,6 +902,9 @@ def build_plan_request(shot: Shot, anchor_keyframe, member_ids: list[str], actio
         anchorDescription=anchor_keyframe.instruction or "",
         actionIntent=action_intent,
         embellishment=embellishment,
+        cameraMode=camera_mode,
+        cameraInstruction=camera_instruction,
+        anchorImages=[AnchorFrameVisual(image=anchor_keyframe.image, width=shot.canvas.width, height=shot.canvas.height)] if anchor_keyframe.image else [],
     )
 
 
@@ -792,12 +930,16 @@ def create_action_group_endpoint(request: ActionGroupRequest) -> Shot:
         raise HTTPException(status_code=422, detail=f"Action group members not found: {missing}")
     if not request.actionIntent.strip():
         raise HTTPException(status_code=422, detail="Action intent is required")
+    _validate_camera_mode(request.cameraMode, request.cameraInstruction)
     try:
         planner = planners.get(request.planner)
     except PlannerNotFoundError as error:
         raise HTTPException(status_code=422, detail="Planning adapter is not available") from error
     try:
-        plan_request = build_plan_request(shot, anchor_keyframe, member_ids, request.actionIntent, request.embellishment, request.desiredDurationFrames)
+        plan_request = build_plan_request(
+            shot, anchor_keyframe, member_ids, request.actionIntent, request.embellishment,
+            request.desiredDurationFrames, request.cameraMode, request.cameraInstruction,
+        )
         execution = planner.execute(plan_request)
         proposal = execution.proposal
     except PlannerNotConfiguredError as error:
@@ -807,7 +949,7 @@ def create_action_group_endpoint(request: ActionGroupRequest) -> Shot:
     except Exception as error:
         raise HTTPException(status_code=502, detail=f"Planning failed: {error}") from error
     try:
-        shot, group_id = create_action_group(shot, anchor_element.id, anchor_keyframe.id, member_ids, proposal, request.actionIntent, plan_request.targetEndFrame)
+        shot, group_id = create_action_group(shot, anchor_element.id, anchor_keyframe.id, member_ids, proposal, request.actionIntent, plan_request.targetEndFrame, request.cameraMode, request.cameraInstruction)
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
     shot.planningHistory.append({

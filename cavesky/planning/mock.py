@@ -61,22 +61,26 @@ class MockPlanner(Planner):
         char_label = self._label(char)
         prop_label = self._label(prop)
         return [
-            PlanStep(frame=frames[0], memberIds=member_ids, stateDescription=f"{char_label} 接触{prop_label}", transitionDescription="稳定抓握", requiresInteractionGroup=requires,phase="main",continuity={"activeHand":"right","contacts":[f"{char.id}:{prop.id}"]}),
-            PlanStep(frame=frames[1], memberIds=member_ids, stateDescription=f"{char_label} 稳定拿起{prop_label}", transitionDescription="动作完成后保持", requiresInteractionGroup=requires,phase="completion",continuity={"activeHand":"right","ownership":{prop.id:char.id},"supports":[f"{char.id}:{prop.id}"]}),
-            PlanStep(frame=frames[2], memberIds=member_ids, stateDescription=f"{char_label} 保持拿起{prop_label}的完成姿态", transitionDescription=None, requiresInteractionGroup=requires,phase="hold",holdFrames=12,continuity={"activeHand":"right","ownership":{prop.id:char.id},"supports":[f"{char.id}:{prop.id}"]}),
+            PlanStep(frame=frames[0], memberIds=member_ids, stateDescription=f"{char_label} 接触{prop_label}", transitionDescription="稳定抓握", requiresInteractionGroup=requires,phase="main",continuity={"activeHand":"right","contacts":[f"{char.id}:{prop.id}"]},framing=self._framing()),
+            PlanStep(frame=frames[1], memberIds=member_ids, stateDescription=f"{char_label} 稳定拿起{prop_label}", transitionDescription="动作完成后保持", requiresInteractionGroup=requires,phase="completion",continuity={"activeHand":"right","ownership":{prop.id:char.id},"supports":[f"{char.id}:{prop.id}"]},framing=self._framing()),
+            PlanStep(frame=frames[2], memberIds=member_ids, stateDescription=f"{char_label} 保持拿起{prop_label}的完成姿态", transitionDescription=None, requiresInteractionGroup=requires,phase="hold",holdFrames=12,continuity={"activeHand":"right","ownership":{prop.id:char.id},"supports":[f"{char.id}:{prop.id}"]},framing=self._framing()),
         ]
 
     def _single_steps(self, frames, member_ids, member) -> list[PlanStep]:
         label = self._label(member)
         return [
-            PlanStep(frame=frames[0], memberIds=member_ids, stateDescription=f"{label} 动作进行中", transitionDescription="动作收尾", requiresInteractionGroup=False,phase="main"),
-            PlanStep(frame=frames[1], memberIds=member_ids, stateDescription=f"{label} 动作完成", transitionDescription="保持完成姿态", requiresInteractionGroup=False,phase="completion"),
-            PlanStep(frame=frames[2], memberIds=member_ids, stateDescription=f"{label} 保持完成姿态", transitionDescription=None, requiresInteractionGroup=False,phase="hold",holdFrames=12),
+            PlanStep(frame=frames[0], memberIds=member_ids, stateDescription=f"{label} 动作进行中", transitionDescription="动作收尾", requiresInteractionGroup=False,phase="main",framing=self._framing()),
+            PlanStep(frame=frames[1], memberIds=member_ids, stateDescription=f"{label} 动作完成", transitionDescription="保持完成姿态", requiresInteractionGroup=False,phase="completion",framing=self._framing()),
+            PlanStep(frame=frames[2], memberIds=member_ids, stateDescription=f"{label} 保持完成姿态", transitionDescription=None, requiresInteractionGroup=False,phase="hold",holdFrames=12,framing=self._framing()),
         ]
 
     def _generic_steps(self, frames, member_ids, requires) -> list[PlanStep]:
         return [
-            PlanStep(frame=frames[0], memberIds=member_ids, stateDescription="动作进行中", transitionDescription="动作收尾", requiresInteractionGroup=requires,phase="main"),
-            PlanStep(frame=frames[1], memberIds=member_ids, stateDescription="动作完成", transitionDescription="保持完成状态", requiresInteractionGroup=requires,phase="completion"),
-            PlanStep(frame=frames[2], memberIds=member_ids, stateDescription="保持完成状态", transitionDescription=None, requiresInteractionGroup=requires,phase="hold",holdFrames=12),
+            PlanStep(frame=frames[0], memberIds=member_ids, stateDescription="动作进行中", transitionDescription="动作收尾", requiresInteractionGroup=requires,phase="main",framing=self._framing()),
+            PlanStep(frame=frames[1], memberIds=member_ids, stateDescription="动作完成", transitionDescription="保持完成状态", requiresInteractionGroup=requires,phase="completion",framing=self._framing()),
+            PlanStep(frame=frames[2], memberIds=member_ids, stateDescription="保持完成状态", transitionDescription=None, requiresInteractionGroup=requires,phase="hold",holdFrames=12,framing=self._framing()),
         ]
+
+    @staticmethod
+    def _framing() -> dict[str, str]:
+        return {"screenPosition": "center", "bodyAnchor": "chest", "framingRisk": "none"}

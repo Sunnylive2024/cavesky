@@ -79,8 +79,16 @@ class InteractionGroup(BaseModel):
     instruction: str
     contextPolicy: Literal["referenceOnly"] = "referenceOnly"
     outputMode: Literal["mergedRgba", "rgbWithMask"] = "mergedRgba"
+    cameraMode: Literal["free", "prefer", "lock", "directed"] = "prefer"
+    cameraInstruction: str | None = None
     exit: InteractionExit = Field(default_factory=InteractionExit)
     keyframes: list[VisualKeyframe] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def directed_camera_requires_instruction(self) -> "InteractionGroup":
+        if self.cameraMode == "directed" and not (self.cameraInstruction or "").strip():
+            raise ValueError("directed camera mode requires a camera instruction")
+        return self
 
 
 class Transition(BaseModel):

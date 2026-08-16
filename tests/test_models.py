@@ -56,6 +56,12 @@ class ShotValidationTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             Shot.model_validate(self.payload)
 
+    def test_directed_camera_requires_instruction(self) -> None:
+        self.payload["interactionGroups"][0]["cameraMode"] = "directed"
+        self.payload["interactionGroups"][0]["cameraInstruction"] = None
+        with self.assertRaises(ValidationError):
+            Shot.model_validate(self.payload)
+
 
 if __name__ == "__main__":
     unittest.main()

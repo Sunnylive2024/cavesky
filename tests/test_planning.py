@@ -1,11 +1,15 @@
 import shutil
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from cavesky.api import app, repository
-from cavesky.models import FrameRange
+from cavesky.models import FrameRange, VisualKeyframe
 from cavesky.planning import (
+    AnchorFrameVisual,
     ElementContext,
     MockPlanner,
     OpenAICompatPlanner,
@@ -113,6 +117,16 @@ class CreateActionGroupTests(unittest.TestCase):
         self.assertEqual([(item.fromFrame,item.toFrame) for item in transitions],[(24,36),(36,48)])
         self.assertIn("转身过程",transitions[0].instruction)
 
+    def test_compile_action_group_prompt_is_camera_aware(self) -> None:
+        anchor = VisualKeyframe(id="A", frame=24, image="/a.png", instruction="首帧", locked=True)
+        tail = VisualKeyframe(id="B", frame=72, image="/b.png", instruction="完成", locked=True, state={"phase": "hold", "holdFrames": 12})
+        free_prompt = compile_action_group_prompt(anchor, [tail], "动作", "free")
+        self.assertNotIn("固定机位", free_prompt)
+        self.assertNotIn("不得推近", free_prompt)
+        lock_prompt = compile_action_group_prompt(anchor, [tail], "动作", "lock")
+        self.assertIn("不得推近", lock_prompt)
+        self.assertIn("保持参考帧相同的摄影机位置", lock_prompt)
+
 
 class OpenAICompatPlannerTests(unittest.TestCase):
     def test_capability_reports_configuration(self) -> None:
@@ -142,6 +156,67 @@ class OpenAICompatPlannerTests(unittest.TestCase):
     def test_parse_plan_proposal_invalid_schema(self) -> None:
         with self.assertRaises(PlannerError):
             parse_plan_proposal('{"wrong": true}')
+
+
+class MultimodalPlannerTests(unittest.TestCase):
+    @staticmethod
+    def _request(anchor_images=None, camera_mode="prefer", camera_instruction=None) -> PlanRequest:
+        return PlanRequest(
+            shotId="SH005", fps=24, durationFrames=96,
+            desiredDurationFrames=48, targetEndFrame=72, modelDurationSeconds=list(range(2, 16)),
+            members=[_member("CHARACTER_E139B319", "character", "短发女性")],
+            anchorFrame=24, anchorDescription="女孩叉腰微笑", actionIntent="抱腰仰头大笑",
+            cameraMode=camera_mode, cameraInstruction=camera_instruction,
+            anchorImages=anchor_images or [],
+        )
+
+    def test_capability_reports_vision_support(self) -> None:
+        vision = OpenAICompatPlanner(base_url="https://example/v1", api_key="k", model="qwen3.6-flash")
+        self.assertTrue(vision.capability.supportsVision)
+        text = OpenAICompatPlanner(base_url="https://example/v1", api_key="k", model="qwen-flash")
+        self.assertFalse(text.capability.supportsVision)
+
+    def test_vision_planner_builds_multimodal_body(self) -> None:
+        planner = OpenAICompatPlanner(base_url="https://example/v1", api_key="k", model="qwen3.6-flash")
+        request = self._request([AnchorFrameVisual(image="data:image/png;base64,AAAA", width=1280, height=720)])
+        user_content = planner._build_body(request)["messages"][1]["content"]
+        self.assertIsInstance(user_content, list)
+        self.assertEqual(user_content[0]["type"], "image_url")
+        self.assertEqual(user_content[0]["image_url"]["url"], "data:image/png;base64,AAAA")
+        self.assertEqual(user_content[1]["type"], "text")
+
+    def test_summary_keeps_reference_not_base64(self) -> None:
+        planner = OpenAICompatPlanner(base_url="https://example/v1", api_key="k", model="qwen3.6-flash")
+        request = self._request([AnchorFrameVisual(image="/generated-media/foo.png")])
+        user_content = planner._build_summary(request)["messages"][1]["content"]
+        image_url = next(part for part in user_content if part.get("type") == "image_url")["image_url"]["url"]
+        self.assertEqual(image_url, "/generated-media/foo.png")
+        self.assertNotIn("base64", image_url)
+
+    def test_text_only_planner_rejects_anchor_images(self) -> None:
+        planner = OpenAICompatPlanner(base_url="https://example/v1", api_key="k", model="qwen-flash")
+        request = self._request([AnchorFrameVisual(image="/generated-media/foo.png")])
+        with self.assertRaises(PlannerError):
+            planner.execute(request)
+
+    def test_plan_request_rejects_directed_without_instruction(self) -> None:
+        with self.assertRaises(ValidationError):
+            self._request(camera_mode="directed")
+
+    def test_planner_resolves_generated_media_url(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "work" / "generations").mkdir(parents=True)
+            (root / "work" / "generations" / "a.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+            planner = OpenAICompatPlanner(base_url="https://example/v1", api_key="k", model="qwen3.6-flash", root=root)
+            data_url = planner._image_data_url("/generated-media/a.png")
+            self.assertTrue(data_url.startswith("data:image/png;base64,"))
+
+    def test_planner_rejects_path_escaping_workspace(self) -> None:
+        with TemporaryDirectory() as directory:
+            planner = OpenAICompatPlanner(base_url="https://example/v1", api_key="k", model="qwen3.6-flash", root=Path(directory))
+            with self.assertRaises(PlannerError):
+                planner._image_data_url("../secret.png")
 
 
 class ActionGroupApiTests(unittest.TestCase):

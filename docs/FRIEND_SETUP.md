@@ -45,7 +45,7 @@ pnpm install
 
 - `wan2.7-image`：关键帧图片；
 - `wan2.7-i2v-2026-04-25`：首尾帧过渡视频；
-- `qwen-flash`：动作规划语言模型。
+- `qwen3.6-flash`：动作规划语言模型（支持视觉，读取锚点关键帧图片）。
 
 复制环境示例：
 
@@ -66,7 +66,7 @@ CAVESKY_WAN_27_VIDEO_MODEL=wan2.7-i2v-2026-04-25
 # 动作规划使用 OpenAI 兼容地址
 CAVESKY_PLANNER_BASE_URL=https://你的业务空间域名.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
 CAVESKY_PLANNER_API_KEY=你的Key
-CAVESKY_PLANNER_MODEL=qwen-flash
+CAVESKY_PLANNER_MODEL=qwen3.6-flash
 ```
 
 同一个业务空间 Key 可以复用在三个 Key 变量中，条件是它具有三个模型的权限。原生 `/api/v1` 与兼容 `/compatible-mode/v1` 是两个不同入口，不能只配置其中一个地址。
