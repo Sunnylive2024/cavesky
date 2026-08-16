@@ -23,6 +23,7 @@ class InMemoryJobStore:
             status=GenerationStatus.QUEUED,
             progress=0,
             message="Generation task queued",
+            requestFingerprint=request.confirmationFingerprint,
         )
         self._jobs[job.id] = job
         return job
@@ -59,6 +60,9 @@ class InMemoryJobStore:
 
     def get(self, job_id: str) -> GenerationJob:
         return self._jobs[job_id]
+
+    def find_by_fingerprint(self, fingerprint: str) -> GenerationJob | None:
+        return next((job for job in self._jobs.values() if job.requestFingerprint == fingerprint), None)
 
     def run(self, job_id: str, task: TransitionTask, adapters: AdapterRegistry) -> GenerationJob:
         job = self._jobs[job_id]

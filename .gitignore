@@ -13,4 +13,5 @@ __pycache__/
 *.log
 work/generations/
 work/models/
+work/plans/
 projects/*/shots/*/generations/*/output.*

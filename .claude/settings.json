@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"c:/Users/sunnylive.LAPTOP-O4NCRTAT/Documents/GitHub/cavesky\" 2>/dev/null; echo \"---DESKTOP---\"; ls -la \"c:/Users/sunnylive.LAPTOP-O4NCRTAT/Desktop/cavesky\" 2>/dev/null)",
+      "Read(//c/Users/sunnylive.LAPTOP-O4NCRTAT/Desktop/**)",
+      "Bash(./.venv/Scripts/python.exe -m unittest discover -s tests -v)",
+      "Bash(netstat -ano -p tcp)",
+      "Bash(tasklist)"
+    ]
+  }
+}

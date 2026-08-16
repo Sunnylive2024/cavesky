@@ -1,0 +1,263 @@
+{
+  "schemaVersion": "0.1",
+  "id": "SH002",
+  "fps": 24,
+  "durationFrames": 96,
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "backgroundColor": "#000000"
+  },
+  "layers": [
+    {
+      "id": "BG",
+      "role": "background",
+      "order": 0,
+      "locked": true
+    },
+    {
+      "id": "SHADOW",
+      "role": "shadow",
+      "order": 10,
+      "locked": false
+    },
+    {
+      "id": "CONTENT",
+      "role": "content",
+      "order": 20,
+      "locked": false
+    },
+    {
+      "id": "FG",
+      "role": "foreground",
+      "order": 30,
+      "locked": true
+    }
+  ],
+  "elements": [
+    {
+      "id": "CHARACTER_B5788215",
+      "kind": "character",
+      "assetId": "ASSET_CHAR_LINA",
+      "layerId": "CONTENT",
+      "activeRange": {
+        "start": 0,
+        "end": 96
+      },
+      "name": "短发女性",
+      "transform": {
+        "x": 0.2635883743970564,
+        "y": 0.5600938752223629,
+        "scale": 1.0,
+        "rotation": 0.0
+      },
+      "visible": true,
+      "locked": false,
+      "keyframes": [
+        {
+          "id": "KF_FC03CDF0",
+          "frame": 24,
+          "image": "/generated-media/2a05dc3996314bb180498c21c78fbb2d.png",
+          "mask": "/generated-media/mask-SH002-CHARACTER_B5788215-KF_FC03CDF0-c941fcef.png",
+          "instruction": "女孩背对着镜头，转过身来，微微一笑",
+          "state": {
+            "maskSource": "manual",
+            "generatedComposite": true
+          },
+          "locked": true
+        }
+      ]
+    }
+  ],
+  "interactionGroups": [
+    {
+      "id": "IG_0BDBEE53",
+      "kind": "action",
+      "members": [
+        "CHARACTER_B5788215"
+      ],
+      "anchorKeyframeId": "KF_FC03CDF0",
+      "range": {
+        "start": 24,
+        "end": 48
+      },
+      "instruction": "女孩背对着镜头，转过身来，微微一笑",
+      "contextPolicy": "referenceOnly",
+      "outputMode": "mergedRgba",
+      "exit": {
+        "mode": "restoreIndependent",
+        "subjectId": null,
+        "targetId": null,
+        "anchor": null
+      },
+      "keyframes": [
+        {
+          "id": "IKF_C4F9EF68",
+          "frame": 36,
+          "image": "/generated-media/433db0a9f55e4ad68949da9057753e7a.png",
+          "mask": "/generated-media/mask-GEN_AC01F88AD0-last-4d62ab97.png",
+          "instruction": "短发女性半面向镜头，面部轮廓清晰可见，眼神聚焦前方，嘴角微微上扬，形成轻微的微笑，头发随动作轻摆",
+          "state": {
+            "transitionToNext": "头部继续转动至正脸，笑容逐渐展开",
+            "generatedComposite": true,
+            "maskSource": "manual"
+          },
+          "locked": true
+          ,"renderPolicy": "optional",
+          "generationBoundary": false,
+          "sourceKind": "generatedImage"
+        },
+        {
+          "id": "IKF_5A187024",
+          "frame": 48,
+          "image": "/generated-media/c056e0e1ae1844479aaf8e213c16aef5.png",
+          "mask": "/generated-media/mask-GEN_52B95F5060-last-e3941943.png",
+          "instruction": "短发女性正对镜头，面带柔和微笑，眼睛微弯，神情自然，双肩放松，双手自然垂于身侧，发丝在光影中呈现轻微动态感",
+          "state": {
+            "generatedComposite": true,
+            "maskSource": "manual"
+          },
+          "locked": true
+          ,"renderPolicy": "required",
+          "generationBoundary": true,
+          "sourceKind": "generatedImage"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "TR_6CB0D444",
+      "targetType": "interactionGroup",
+      "targetId": "IG_0BDBEE53",
+      "fromFrame": 24,
+      "toFrame": 48,
+      "instruction": "女孩背对着镜头，转过身来，微微一笑",
+      "strategy": "auto",
+      "selectedGenerationId": null
+    }
+  ],
+  "generations": [
+    {
+      "id": "GEN_F85428036C",
+      "type": "keyframe",
+      "targetId": "CHARACTER_B5788215",
+      "keyframeId": "KF_FC03CDF0",
+      "adapter": "wan-image",
+      "outputs": [
+        "/generated-media/0b1f5cdeda2e4040831ecf5bc962bb4a.png",
+        "/generated-media/2a05dc3996314bb180498c21c78fbb2d.png"
+      ],
+      "status": "accepted",
+      "message": "Generated 2 keyframe image(s)",
+      "output": "/generated-media/2a05dc3996314bb180498c21c78fbb2d.png",
+      "previousOutput": "/source-assets/1b4c510fd9f9d72a461a04e7dc2a2834359bbbc9.jfif"
+    },
+    {
+      "id": "GEN_D965876F0D",
+      "type": "interactionKeyframe",
+      "targetId": "IG_0BDBEE53",
+      "keyframeId": "IKF_C4F9EF68",
+      "adapter": "wan-image",
+      "outputs": [
+        "/generated-media/433db0a9f55e4ad68949da9057753e7a.png",
+        "/generated-media/b1e309f51d044e6081eef36a023a00fc.png"
+      ],
+      "status": "accepted",
+      "message": "Generated 2 keyframe image(s)",
+      "output": "/generated-media/433db0a9f55e4ad68949da9057753e7a.png",
+      "previousOutput": ""
+    },
+    {
+      "id": "GEN_C130979284",
+      "type": "interactionKeyframe",
+      "targetId": "IG_0BDBEE53",
+      "keyframeId": "IKF_5A187024",
+      "adapter": "wan-image",
+      "outputs": [
+        "/generated-media/c056e0e1ae1844479aaf8e213c16aef5.png",
+        "/generated-media/2e5bd104436f43f4a603a0f4388f8e5b.png"
+      ],
+      "status": "accepted",
+      "message": "Generated 2 keyframe image(s)",
+      "output": "/generated-media/c056e0e1ae1844479aaf8e213c16aef5.png",
+      "previousOutput": ""
+    },
+    {
+      "id": "GEN_BDD945C044",
+      "type": "transition",
+      "transitionId": "TR_5F4F30FF",
+      "targetId": "IG_0BDBEE53",
+      "adapter": "wan-kf2v",
+      "outputs": [
+        "/generated-media/e199b2030dd6413287fbdc259550efa6.mp4"
+      ],
+      "status": "succeeded",
+      "message": "Wan transition video generated"
+    },
+    {
+      "id": "GEN_AC01F88AD0",
+      "type": "transition",
+      "transitionId": "TR_5F4F30FF",
+      "targetId": "IG_0BDBEE53",
+      "adapter": "wan-kf2v",
+      "outputs": [
+        "/generated-media/d993605160164840a455ae3cd54af6ef.mp4"
+      ],
+      "status": "accepted",
+      "message": "Wan transition video generated",
+      "output": "/generated-media/d993605160164840a455ae3cd54af6ef.mp4",
+      "maskOutput": "/generated-media/video-mask-GEN_AC01F88AD0-c8388796.mp4",
+      "maskMetadata": {
+        "frames": 150,
+        "width": 320,
+        "height": 180,
+        "fps": "30/1"
+      }
+    },
+    {
+      "id": "GEN_A0644405E8",
+      "type": "transition",
+      "transitionId": "TR_5F4F30FF",
+      "targetId": "IG_0BDBEE53",
+      "adapter": "wan-i2v-2.7",
+      "outputs": [
+        "/generated-media/70e22c1d87d342c5bb3aaa6f148052a7.mp4"
+      ],
+      "status": "succeeded",
+      "message": "Wan 2.7 generated a 2s transition video"
+    },
+    {
+      "id": "GEN_6E20209315",
+      "type": "transition",
+      "transitionId": "TR_5F4F30FF",
+      "targetId": "IG_0BDBEE53",
+      "adapter": "wan-kf2v",
+      "outputs": [
+        "/generated-media/0c59ef0bf6f143529c019e311307f690.mp4"
+      ],
+      "status": "succeeded",
+      "message": "Wan transition video generated"
+    },
+    {
+      "id": "GEN_52B95F5060",
+      "type": "transition",
+      "transitionId": "TR_4916CECB",
+      "targetId": "IG_0BDBEE53",
+      "adapter": "wan-kf2v",
+      "outputs": [
+        "/generated-media/5b238acbab37472fa06df2392246ac95.mp4"
+      ],
+      "status": "accepted",
+      "message": "Wan transition video generated",
+      "output": "/generated-media/5b238acbab37472fa06df2392246ac95.mp4",
+      "maskOutput": "/generated-media/video-mask-GEN_52B95F5060-6563bc22.mp4",
+      "maskMetadata": {
+        "frames": 150,
+        "width": 320,
+        "height": 180,
+        "fps": "30/1"
+      }
+    }
+  ]
+}

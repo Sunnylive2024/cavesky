@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "0.1",
+  "id": "SH003",
+  "fps": 24,
+  "durationFrames": 96,
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "backgroundColor": "#000000"
+  },
+  "layers": [
+    {
+      "id": "BG",
+      "role": "background",
+      "order": 0,
+      "locked": true
+    },
+    {
+      "id": "SHADOW",
+      "role": "shadow",
+      "order": 10,
+      "locked": false
+    },
+    {
+      "id": "CONTENT",
+      "role": "content",
+      "order": 20,
+      "locked": false
+    },
+    {
+      "id": "FG",
+      "role": "foreground",
+      "order": 30,
+      "locked": true
+    }
+  ],
+  "elements": [],
+  "interactionGroups": [],
+  "transitions": [],
+  "generations": [],
+  "planningHistory": []
+}

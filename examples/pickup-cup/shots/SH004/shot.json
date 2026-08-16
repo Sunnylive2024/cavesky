@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "0.1",
+  "id": "SH004",
+  "fps": 24,
+  "durationFrames": 96,
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "backgroundColor": "#000000"
+  },
+  "layers": [
+    {
+      "id": "BG",
+      "role": "background",
+      "order": 0,
+      "locked": true
+    },
+    {
+      "id": "SHADOW",
+      "role": "shadow",
+      "order": 10,
+      "locked": false
+    },
+    {
+      "id": "CONTENT",
+      "role": "content",
+      "order": 20,
+      "locked": false
+    },
+    {
+      "id": "FG",
+      "role": "foreground",
+      "order": 30,
+      "locked": true
+    }
+  ],
+  "elements": [
+    {
+      "id": "CHARACTER_954D6868",
+      "kind": "character",
+      "assetId": "ASSET_CHAR_LINA",
+      "layerId": "CONTENT",
+      "activeRange": {
+        "start": 0,
+        "end": 96
+      },
+      "name": "短发女性",
+      "transform": {
+        "x": 0.5,
+        "y": 0.5,
+        "scale": 1.0,
+        "rotation": 0.0
+      },
+      "visible": true,
+      "locked": false,
+      "keyframes": [
+        {
+          "id": "KF_238AD324",
+          "frame": 25,
+          "image": "/source-assets/1b4c510fd9f9d72a461a04e7dc2a2834359bbbc9.jfif",
+          "mask": null,
+          "instruction": "女孩叉腰微笑",
+          "state": {},
+          "locked": false
+        }
+      ]
+    }
+  ],
+  "interactionGroups": [
+    {
+      "id": "IG_0F59F953",
+      "members": [
+        "CHARACTER_954D6868"
+      ],
+      "anchorKeyframeId": "KF_238AD324",
+      "range": {
+        "start": 25,
+        "end": 40
+      },
+      "instruction": "女孩叉腰微笑",
+      "contextPolicy": "referenceOnly",
+      "outputMode": "mergedRgba",
+      "exit": {
+        "mode": "restoreIndependent",
+        "subjectId": null,
+        "targetId": null,
+        "anchor": null
+      },
+      "keyframes": [
+        {
+          "id": "IKF_B60D72C9",
+          "frame": 26,
+          "image": "",
+          "mask": null,
+          "instruction": "短发女性双手叉腰，手掌朝下，肘部微外展，身体略微前倾，嘴角上扬呈自然微笑，眼神望向镜头，发丝随轻微动作飘动",
+          "state": {
+            "transitionToNext": "从站立姿势开始，双手缓慢抬起至腰部并扣住，面部表情由平静转为微笑"
+          },
+          "locked": false
+        },
+        {
+          "id": "IKF_0B241E51",
+          "frame": 30,
+          "image": "",
+          "mask": null,
+          "instruction": "短发女性保持叉腰姿态，重心略移至右脚，左腿微屈，肩部放松，微笑持续，光影从左侧照射，勾勒出脸部轮廓",
+          "state": {
+            "transitionToNext": "身体姿态稳定，轻微调整重心以增强动态平衡感"
+          },
+          "locked": false
+        },
+        {
+          "id": "IKF_17994E99",
+          "frame": 35,
+          "image": "",
+          "mask": null,
+          "instruction": "短发女性维持叉腰微笑，头部微微侧倾约15度，目光斜视右侧，嘴角弧度稍加深，表现出俏皮情绪",
+          "state": {
+            "transitionToNext": "头部轻转，配合表情变化展现自信与轻松感"
+          },
+          "locked": false
+        },
+        {
+          "id": "IKF_23D8C913",
+          "frame": 40,
+          "image": "",
+          "mask": null,
+          "instruction": "短发女性最终定格在叉腰微笑状态，双臂稳固支撑腰部，身体正对镜头，表情自然，背景虚化突出人物主体",
+          "state": {},
+          "locked": false
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "TR_9ED15A88",
+      "targetType": "interactionGroup",
+      "targetId": "IG_0F59F953",
+      "fromFrame": 25,
+      "toFrame": 40,
+      "instruction": "女孩叉腰微笑",
+      "strategy": "auto",
+      "selectedGenerationId": null
+    }
+  ],
+  "generations": []
+}

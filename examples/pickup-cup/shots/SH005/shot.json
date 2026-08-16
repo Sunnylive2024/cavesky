@@ -1,0 +1,421 @@
+{
+  "schemaVersion": "0.1",
+  "id": "SH005",
+  "fps": 24,
+  "durationFrames": 96,
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "backgroundColor": "#000000"
+  },
+  "layers": [
+    {
+      "id": "BG",
+      "role": "background",
+      "order": 0,
+      "locked": true
+    },
+    {
+      "id": "SHADOW",
+      "role": "shadow",
+      "order": 10,
+      "locked": false
+    },
+    {
+      "id": "CONTENT",
+      "role": "content",
+      "order": 20,
+      "locked": false
+    },
+    {
+      "id": "FG",
+      "role": "foreground",
+      "order": 30,
+      "locked": true
+    }
+  ],
+  "elements": [
+    {
+      "id": "CHARACTER_E139B319",
+      "kind": "character",
+      "assetId": "ASSET_CHAR_LINA",
+      "layerId": "CONTENT",
+      "activeRange": {
+        "start": 0,
+        "end": 96
+      },
+      "name": "短发女性",
+      "transform": {
+        "x": 0.5,
+        "y": 0.5,
+        "scale": 1.0,
+        "rotation": 0.0
+      },
+      "visible": true,
+      "locked": false,
+      "keyframes": [
+        {
+          "id": "KF_0A4F4E95",
+          "frame": 24,
+          "image": "/generated-media/5e48cc42bf1149c2af9fe6e61fbd6f47.png",
+          "mask": "/generated-media/mask-SH005-CHARACTER_E139B319-KF_0A4F4E95-f53e85a1.png",
+          "instruction": "女孩叉腰微笑",
+          "state": {
+            "generatedComposite": true,
+            "maskSource": "manual"
+          },
+          "locked": true,
+          "renderPolicy": "required",
+          "generationBoundary": true,
+          "sourceKind": "authored"
+        }
+      ]
+    },
+    {
+      "id": "BACKGROUND_6D1379DB",
+      "kind": "background",
+      "assetId": "ASSET_BG_LIVING_ROOM",
+      "layerId": "BG",
+      "activeRange": {
+        "start": 0,
+        "end": 96
+      },
+      "name": "水池场景",
+      "transform": {
+        "x": 0.5,
+        "y": 0.5,
+        "scale": 4.55,
+        "rotation": 0.0
+      },
+      "visible": true,
+      "locked": false,
+      "keyframes": [
+        {
+          "id": "KF_AEDB6049",
+          "frame": 24,
+          "image": "/source-assets/023b5bb5c9ea15ce36d39af4465b2df33a87e8501480-bkimg-process,v_1,rw_16,rh_9,maxl_504.webp",
+          "mask": null,
+          "instruction": null,
+          "state": {},
+          "locked": false,
+          "renderPolicy": "required",
+          "generationBoundary": true,
+          "sourceKind": "authored"
+        }
+      ]
+    }
+  ],
+  "interactionGroups": [
+    {
+      "id": "IG_BDB4D5D4",
+      "kind": "action",
+      "members": [
+        "CHARACTER_E139B319"
+      ],
+      "anchorKeyframeId": "KF_0A4F4E95",
+      "range": {
+        "start": 24,
+        "end": 72
+      },
+      "instruction": "女孩抱腰仰头大笑，然后笑弯了腰",
+      "contextPolicy": "referenceOnly",
+      "outputMode": "mergedRgba",
+      "exit": {
+        "mode": "restoreIndependent",
+        "subjectId": null,
+        "targetId": null,
+        "anchor": null
+      },
+      "keyframes": [
+        {
+          "id": "IKF_3881CF70",
+          "frame": 33,
+          "image": "",
+          "mask": null,
+          "instruction": "女孩双手环抱腰部，头部向后仰起，嘴角上扬至最大，眼睛微眯，面部肌肉因大笑而轻微扭曲",
+          "state": {
+            "transitionToNext": "从叉腰微笑状态开始，双臂迅速环抱腰部，头部快速后仰，进入大笑姿态",
+            "phase": "main",
+            "holdFrames": 0,
+            "continuity": {
+              "facing": "front",
+              "activeHand": "both",
+              "ownership": {},
+              "contacts": [],
+              "supports": [],
+              "wearables": []
+            }
+          },
+          "locked": false,
+          "renderPolicy": "optional",
+          "generationBoundary": false,
+          "sourceKind": "authored"
+        },
+        {
+          "id": "IKF_BB41B1DC",
+          "frame": 42,
+          "image": "",
+          "mask": null,
+          "instruction": "身体前倾，腰部弯曲成明显弧形，双手仍环抱腰部，头部低垂靠近膝盖，笑声持续，肩部随呼吸剧烈起伏",
+          "state": {
+            "transitionToNext": "身体重心前移，腰腹发力使躯干大幅弯曲，形成前屈姿态，保持大笑表情",
+            "phase": "main",
+            "holdFrames": 0,
+            "continuity": {
+              "facing": "front",
+              "activeHand": "both",
+              "ownership": {},
+              "contacts": [],
+              "supports": [],
+              "wearables": []
+            }
+          },
+          "locked": false,
+          "renderPolicy": "optional",
+          "generationBoundary": false,
+          "sourceKind": "authored"
+        },
+        {
+          "id": "IKF_ABE8462C",
+          "frame": 59,
+          "image": "",
+          "mask": null,
+          "instruction": "身体完全弯下，几乎呈蜷缩状，双手紧抱腰部，头部贴近膝盖，脸颊贴在大腿外侧，笑声渐弱，但嘴角仍保持上扬",
+          "state": {
+            "transitionToNext": "继续加深前屈动作，完成最终的弯腰姿态，进入稳定笑态",
+            "phase": "completion",
+            "holdFrames": 12,
+            "continuity": {
+              "facing": "front",
+              "activeHand": "both",
+              "ownership": {},
+              "contacts": [],
+              "supports": [],
+              "wearables": []
+            }
+          },
+          "locked": false,
+          "renderPolicy": "optional",
+          "generationBoundary": false,
+          "sourceKind": "authored"
+        },
+        {
+          "id": "IKF_E0299A8E",
+          "frame": 72,
+          "image": "/generated-media/16e88a6988634be5b693c1d0eab2e40a.png",
+          "mask": "/generated-media/mask-GEN_0E8758CAE3-last-839a2454.png",
+          "instruction": "身体维持蜷缩姿态，双手仍环抱腰部，面部放松，笑容逐渐收敛，眼神略显迷离",
+          "state": {
+            "phase": "hold",
+            "holdFrames": 12,
+            "continuity": {
+              "facing": "front",
+              "activeHand": "both",
+              "ownership": {},
+              "contacts": [],
+              "supports": [],
+              "wearables": []
+            },
+            "generatedComposite": true
+          },
+          "locked": true,
+          "renderPolicy": "required",
+          "generationBoundary": true,
+          "sourceKind": "authored"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "TR_0CC09958",
+      "targetType": "interactionGroup",
+      "targetId": "IG_BDB4D5D4",
+      "fromFrame": 24,
+      "toFrame": 72,
+      "instruction": "动作意图：女孩抱腰仰头大笑，然后笑弯了腰。按相对时间推进：0%（start）：女孩叉腰微笑；到下一状态：进入动作；保持 0 帧；连续性：{}；19%（main）：女孩双手环抱腰部，头部向后仰起，嘴角上扬至最大，眼睛微眯，面部肌肉因大笑而轻微扭曲；到下一状态：从叉腰微笑状态开始，双臂迅速环抱腰部，头部快速后仰，进入大笑姿态；保持 0 帧；连续性：{\"facing\":\"front\",\"activeHand\":\"both\",\"ownership\":{},\"contacts\":[],\"supports\":[],\"wearables\":[]}；38%（main）：身体前倾，腰部弯曲成明显弧形，双手仍环抱腰部，头部低垂靠近膝盖，笑声持续，肩部随呼吸剧烈起伏；到下一状态：身体重心前移，腰腹发力使躯干大幅弯曲，形成前屈姿态，保持大笑表情；保持 0 帧；连续性：{\"facing\":\"front\",\"activeHand\":\"both\",\"ownership\":{},\"contacts\":[],\"supports\":[],\"wearables\":[]}；73%（completion）：身体完全弯下，几乎呈蜷缩状，双手紧抱腰部，头部贴近膝盖，脸颊贴在大腿外侧，笑声渐弱，但嘴角仍保持上扬；到下一状态：继续加深前屈动作，完成最终的弯腰姿态，进入稳定笑态；保持 12 帧；连续性：{\"facing\":\"front\",\"activeHand\":\"both\",\"ownership\":{},\"contacts\":[],\"supports\":[],\"wearables\":[]}；100%（hold）：身体维持蜷缩姿态，双手仍环抱腰部，面部放松，笑容逐渐收敛，眼神略显迷离；到下一状态：无；保持 12 帧；连续性：{\"facing\":\"front\",\"activeHand\":\"both\",\"ownership\":{},\"contacts\":[],\"supports\":[],\"wearables\":[]}。固定人物身份、左右手、朝向、物体归属、接触/支撑关系、背景与机位。",
+      "strategy": "aiVideo",
+      "selectedGenerationId": "GEN_0E8758CAE3"
+    }
+  ],
+  "generations": [
+    {
+      "id": "GEN_534EB34143",
+      "type": "keyframe",
+      "targetId": "CHARACTER_E139B319",
+      "keyframeId": "KF_0A4F4E95",
+      "adapter": "wan-image",
+      "outputs": [
+        "/generated-media/255d0eae1e514639b59a318fc3561b47.png",
+        "/generated-media/5e48cc42bf1149c2af9fe6e61fbd6f47.png"
+      ],
+      "status": "accepted",
+      "message": "Generated 2 keyframe image(s)",
+      "output": "/generated-media/5e48cc42bf1149c2af9fe6e61fbd6f47.png",
+      "previousOutput": "/source-assets/1b4c510fd9f9d72a461a04e7dc2a2834359bbbc9.jfif"
+    },
+    {
+      "id": "GEN_244C404662",
+      "type": "interactionKeyframe",
+      "targetId": "IG_BDB4D5D4",
+      "keyframeId": "IKF_E0299A8E",
+      "adapter": "wan-image",
+      "outputs": [
+        "/generated-media/16e88a6988634be5b693c1d0eab2e40a.png",
+        "/generated-media/cf218003bb3e4093a468090eb1ae3262.png"
+      ],
+      "status": "accepted",
+      "message": "Generated 2 keyframe image(s)",
+      "output": "/generated-media/16e88a6988634be5b693c1d0eab2e40a.png",
+      "previousOutput": ""
+    },
+    {
+      "id": "GEN_C41CD60658",
+      "type": "interactionKeyframe",
+      "targetId": "IG_BDB4D5D4",
+      "keyframeId": "IKF_E0299A8E",
+      "adapter": "wan-image",
+      "outputs": [
+        "/generated-media/43cfaa0542da45f7882cef705e16691e.png",
+        "/generated-media/cac8022cd89945bba8cc46b99525cc30.png"
+      ],
+      "status": "succeeded",
+      "message": "Generated 2 keyframe image(s)"
+    },
+    {
+      "id": "GEN_0E8758CAE3",
+      "type": "transition",
+      "transitionId": "TR_0CC09958",
+      "targetId": "IG_BDB4D5D4",
+      "adapter": "wan-i2v-2.7",
+      "outputs": [
+        "/generated-media/2c8dc3a6c0dc472e8f9850b4c2081931.mp4"
+      ],
+      "status": "accepted",
+      "message": "Wan 2.7 generated a 2s transition video",
+      "requestFingerprint": "e5c571af773667cca2cd08cfbcf95acbaa621a21620d1b4a81bce9f4ba4d628f",
+      "output": "/generated-media/2c8dc3a6c0dc472e8f9850b4c2081931.mp4",
+      "maskOutput": "/generated-media/video-mask-GEN_0E8758CAE3-dffd7137.mp4",
+      "maskMetadata": {
+        "frames": 60,
+        "width": 512,
+        "height": 288,
+        "fps": "30/1"
+      },
+      "qualityReview": {
+        "decision": "accepted",
+        "identityConsistent": true,
+        "handednessConsistent": true,
+        "limbsValid": true,
+        "backgroundStable": true,
+        "speedNatural": true,
+        "rejectionReason": null
+      }
+    }
+  ],
+  "planningHistory": [
+    {
+      "id": "PLAN_5FBA734308",
+      "createdAt": "2026-08-16T12:19:40.009194+00:00",
+      "planner": "openai-compat",
+      "anchorKeyframeId": "KF_0A4F4E95",
+      "groupId": "IG_BDB4D5D4",
+      "status": "succeeded",
+      "rawRequest": {
+        "model": "qwen-flash",
+        "messages": [
+          {
+            "role": "system",
+            "content": "你是动画分镜的动作规划助手。anchorDescription 是首帧当前可见状态，actionIntent 是首帧之后要发生的动作。你的任务是根据 actionIntent 规划 2–4 个连续的可见关键状态；不要把首帧静态描述误当作动作指令。\n\n只输出一个 JSON 对象，不要输出任何解释、Markdown 或代码块。格式：\n\n{\"steps\": [{\"frame\": 整数, \"memberIds\": [\"元素ID\"], \"stateDescription\": \"该状态的详细视觉提示词\", \"transitionDescription\": \"到下一状态的动作描述，最后一步为 null\", \"requiresInteractionGroup\": 布尔值, \"phase\": \"main|completion|hold\", \"holdFrames\": 整数, \"continuity\": {\"facing\":\"left|right|front|back|unchanged\",\"activeHand\":\"left|right|both|none|unchanged\",\"ownership\":{},\"contacts\":[],\"supports\":[],\"wearables\":[]}}]}\n\n规则：\n- 只拆解 actionIntent 里已经包含的动作，绝对不要编造意图之外的新动作或新剧情。\n- stateDescription 要具体、可执行（姿态、朝向、表情、手部等），但不要写冗长咒语。\n- 修饰程度 = 输入里的 embellishment（0 = 严格照描述拆分、几乎不加修饰；1 = 可补充合理的姿态、表情、光影细节）。\n- 后端已经确定动作组范围。所有 step.frame 必须大于 anchorFrame、不超过 targetEndFrame、逐步递增；最后一个 step 必须恰好等于 targetEndFrame。不得自行延长或缩短动作组。\n- desiredDurationFrames 是作者确认的目标长度；modelDurationSeconds 是后续视频模型允许请求的整数秒集合，只用于安排动作节奏，不能改变 targetEndFrame。\n- memberIds 只用输入 members 里出现的 id；两个及以上成员发生接触时 requiresInteractionGroup 为 true。\n- 必须覆盖 main、completion、hold；hold 通常 12–24 帧，重要情绪或姿态可 18–36 帧。\n- 多个完整动词或目标不要挤在同一组；只规划 actionIntent 的第一个主要变化，并保持运动弧线、缓入缓出和屏幕方向。\n- 左右手、朝向、物体归属、接触、支撑和穿戴关系必须写入 continuity，不得只写在自然语言里。"
+          },
+          {
+            "role": "user",
+            "content": "{\"shotId\": \"SH005\", \"fps\": 24, \"durationFrames\": 96, \"desiredDurationFrames\": 48, \"targetEndFrame\": 72, \"modelDurationSeconds\": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], \"members\": [{\"id\": \"CHARACTER_E139B319\", \"kind\": \"character\", \"name\": \"短发女性\", \"activeRange\": {\"start\": 0, \"end\": 96}}], \"anchorFrame\": 24, \"anchorDescription\": \"女孩叉腰微笑\", \"actionIntent\": \"女孩抱腰仰头大笑，然后笑弯了腰\", \"embellishment\": 0.3}"
+          }
+        ],
+        "temperature": 0.44
+      },
+      "rawResponse": "{\"steps\": [{\"frame\": 25, \"memberIds\": [\"CHARACTER_E139B319\"], \"stateDescription\": \"女孩双手环抱腰部，头部向后仰起，嘴角上扬至最大，眼睛微眯，面部肌肉因大笑而轻微扭曲\", \"transitionDescription\": \"从叉腰微笑状态开始，双臂迅速环抱腰部，头部快速后仰，进入大笑姿态\", \"requiresInteractionGroup\": false, \"phase\": \"main\", \"holdFrames\": 0, \"continuity\": {\"facing\":\"front\",\"activeHand\":\"both\",\"ownership\":{},\"contacts\":[],\"supports\":[],\"wearables\":[]}}, {\"frame\": 30, \"memberIds\": [\"CHARACTER_E139B319\"], \"stateDescription\": \"身体前倾，腰部弯曲成明显弧形，双手仍环抱腰部，头部低垂靠近膝盖，笑声持续，肩部随呼吸剧烈起伏\", \"transitionDescription\": \"身体重心前移，腰腹发力使躯干大幅弯曲，形成前屈姿态，保持大笑表情\", \"requiresInteractionGroup\": false, \"phase\": \"main\", \"holdFrames\": 0, \"continuity\": {\"facing\":\"front\",\"activeHand\":\"both\",\"ownership\":{},\"contacts\":[],\"supports\":[],\"wearables\":[]}}, {\"frame\": 60, \"memberIds\": [\"CHARACTER_E139B319\"], \"stateDescription\": \"身体完全弯下，几乎呈蜷缩状，双手紧抱腰部，头部贴近膝盖，脸颊贴在大腿外侧，笑声渐弱，但嘴角仍保持上扬\", \"transitionDescription\": \"继续加深前屈动作，完成最终的弯腰姿态，进入稳定笑态\", \"requiresInteractionGroup\": false, \"phase\": \"completion\", \"holdFrames\": 12, \"continuity\": {\"facing\":\"front\",\"activeHand\":\"both\",\"ownership\":{},\"contacts\":[],\"supports\":[],\"wearables\":[]}}, {\"frame\": 72, \"memberIds\": [\"CHARACTER_E139B319\"], \"stateDescription\": \"身体维持蜷缩姿态，双手仍环抱腰部，头部轻靠膝盖，面部放松，笑容逐渐收敛，眼神略显迷离\", \"transitionDescription\": null, \"requiresInteractionGroup\": false, \"phase\": \"hold\", \"holdFrames\": 12, \"continuity\": {\"facing\":\"front\",\"activeHand\":\"both\",\"ownership\":{},\"contacts\":[],\"supports\":[],\"wearables\":[]}}]}",
+      "parsedProposal": {
+        "steps": [
+          {
+            "frame": 25,
+            "memberIds": [
+              "CHARACTER_E139B319"
+            ],
+            "stateDescription": "女孩双手环抱腰部，头部向后仰起，嘴角上扬至最大，眼睛微眯，面部肌肉因大笑而轻微扭曲",
+            "transitionDescription": "从叉腰微笑状态开始，双臂迅速环抱腰部，头部快速后仰，进入大笑姿态",
+            "requiresInteractionGroup": false,
+            "phase": "main",
+            "holdFrames": 0,
+            "continuity": {
+              "facing": "front",
+              "activeHand": "both",
+              "ownership": {},
+              "contacts": [],
+              "supports": [],
+              "wearables": []
+            }
+          },
+          {
+            "frame": 30,
+            "memberIds": [
+              "CHARACTER_E139B319"
+            ],
+            "stateDescription": "身体前倾，腰部弯曲成明显弧形，双手仍环抱腰部，头部低垂靠近膝盖，笑声持续，肩部随呼吸剧烈起伏",
+            "transitionDescription": "身体重心前移，腰腹发力使躯干大幅弯曲，形成前屈姿态，保持大笑表情",
+            "requiresInteractionGroup": false,
+            "phase": "main",
+            "holdFrames": 0,
+            "continuity": {
+              "facing": "front",
+              "activeHand": "both",
+              "ownership": {},
+              "contacts": [],
+              "supports": [],
+              "wearables": []
+            }
+          },
+          {
+            "frame": 60,
+            "memberIds": [
+              "CHARACTER_E139B319"
+            ],
+            "stateDescription": "身体完全弯下，几乎呈蜷缩状，双手紧抱腰部，头部贴近膝盖，脸颊贴在大腿外侧，笑声渐弱，但嘴角仍保持上扬",
+            "transitionDescription": "继续加深前屈动作，完成最终的弯腰姿态，进入稳定笑态",
+            "requiresInteractionGroup": false,
+            "phase": "completion",
+            "holdFrames": 12,
+            "continuity": {
+              "facing": "front",
+              "activeHand": "both",
+              "ownership": {},
+              "contacts": [],
+              "supports": [],
+              "wearables": []
+            }
+          },
+          {
+            "frame": 72,
+            "memberIds": [
+              "CHARACTER_E139B319"
+            ],
+            "stateDescription": "身体维持蜷缩姿态，双手仍环抱腰部，头部轻靠膝盖，面部放松，笑容逐渐收敛，眼神略显迷离",
+            "transitionDescription": null,
+            "requiresInteractionGroup": false,
+            "phase": "hold",
+            "holdFrames": 12,
+            "continuity": {
+              "facing": "front",
+              "activeHand": "both",
+              "ownership": {},
+              "contacts": [],
+              "supports": [],
+              "wearables": []
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

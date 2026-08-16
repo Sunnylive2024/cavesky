@@ -38,6 +38,9 @@ class VisualKeyframe(BaseModel):
     instruction: str | None = None
     state: dict[str, Any] = Field(default_factory=dict)
     locked: bool = False
+    renderPolicy: Literal["required", "optional", "extractFromVideo"] = "optional"
+    generationBoundary: bool = False
+    sourceKind: Literal["authored", "generatedImage", "acceptedVideoFrame"] = "authored"
 
 
 class Transform(BaseModel):
@@ -69,7 +72,9 @@ class InteractionExit(BaseModel):
 
 class InteractionGroup(BaseModel):
     id: str
-    members: list[str] = Field(min_length=2)
+    kind: Literal["action", "interaction"]
+    members: list[str] = Field(min_length=1)  # 1 成员 = 单元素动作状态；2+ = 交互组
+    anchorKeyframeId: str  # 指向发起元素上的首帧关键帧；组从它派生并锚定
     range: FrameRange
     instruction: str
     contextPolicy: Literal["referenceOnly"] = "referenceOnly"
@@ -100,6 +105,7 @@ class Shot(BaseModel):
     interactionGroups: list[InteractionGroup] = Field(default_factory=list)
     transitions: list[Transition] = Field(default_factory=list)
     generations: list[dict[str, Any]] = Field(default_factory=list)
+    planningHistory: list[dict[str, Any]] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_references(self) -> "Shot":
@@ -117,12 +123,20 @@ class Shot(BaseModel):
                 if keyframe.frame > self.durationFrames:
                     raise ValueError(f"keyframe {keyframe.id} exceeds shot duration")
         for group in self.interactionGroups:
+            if len(group.members) != len(set(group.members)):
+                raise ValueError(f"interaction group {group.id} has duplicate members")
+            if group.kind == "action" and len(group.members) != 1:
+                raise ValueError(f"action group {group.id} must have exactly one member")
+            if group.kind == "interaction" and len(group.members) < 2:
+                raise ValueError(f"interaction group {group.id} must have at least two members")
             if group.exit.subjectId is not None and group.exit.subjectId not in group.members:
                 raise ValueError(f"interaction group {group.id} exit subject is not a member")
             if group.exit.targetId is not None and group.exit.targetId not in group.members:
                 raise ValueError(f"interaction group {group.id} exit target is not a member")
             if group.exit.mode == "attachToMember" and (not group.exit.subjectId or not group.exit.targetId or group.exit.subjectId == group.exit.targetId):
                 raise ValueError(f"interaction group {group.id} attachment requires distinct subject and target members")
+            if group.kind == "action" and group.exit.mode == "attachToMember":
+                raise ValueError(f"action group {group.id} cannot attach to another member")
             if group.exit.mode == "hideMember" and not group.exit.subjectId:
                 raise ValueError(f"interaction group {group.id} hideMember requires a subject member")
             missing = set(group.members) - element_ids
@@ -130,15 +144,48 @@ class Shot(BaseModel):
                 raise ValueError(f"interaction group {group.id} has missing members: {sorted(missing)}")
             if group.range.end > self.durationFrames:
                 raise ValueError(f"interaction group {group.id} exceeds shot duration")
+            anchor_matches = [
+                (element, keyframe)
+                for element in self.elements
+                for keyframe in element.keyframes
+                if keyframe.id == group.anchorKeyframeId
+            ]
+            if len(anchor_matches) != 1:
+                raise ValueError(f"interaction group {group.id} has missing or ambiguous anchor")
+            anchor_element, anchor_keyframe = anchor_matches[0]
+            if anchor_element.id not in group.members:
+                raise ValueError(f"interaction group {group.id} anchor is not owned by a member")
+            if anchor_keyframe.frame != group.range.start:
+                raise ValueError(f"interaction group {group.id} anchor must equal range start")
+            member_elements = [element for element in self.elements if element.id in group.members]
+            common_start = max(element.activeRange.start for element in member_elements)
+            common_end = min(element.activeRange.end for element in member_elements)
+            if group.range.start < common_start or group.range.end > common_end:
+                raise ValueError(f"interaction group {group.id} exceeds member active-range intersection")
+            frames = [keyframe.frame for keyframe in group.keyframes]
+            if frames != sorted(frames) or len(frames) != len(set(frames)):
+                raise ValueError(f"interaction group {group.id} keyframes must be unique and strictly ordered")
             for keyframe in group.keyframes:
-                if keyframe.frame < group.range.start or keyframe.frame > group.range.end:
+                if keyframe.frame <= group.range.start or keyframe.frame > group.range.end:
                     raise ValueError(f"interaction keyframe {keyframe.id} is outside group range")
+            if not anchor_keyframe.image:
+                raise ValueError(f"interaction group {group.id} anchor needs an image")
+            if not group.keyframes or not group.keyframes[-1].generationBoundary:
+                raise ValueError(f"interaction group {group.id} needs an end boundary")
+        anchors = [group.anchorKeyframeId for group in self.interactionGroups]
+        if len(anchors) != len(set(anchors)):
+            raise ValueError("an anchor keyframe can own only one action group")
         for transition in self.transitions:
             targets = group_ids if transition.targetType == "interactionGroup" else element_ids
             if transition.targetId not in targets:
                 raise ValueError(f"transition {transition.id} references missing target")
             if transition.toFrame <= transition.fromFrame or transition.toFrame > self.durationFrames:
                 raise ValueError(f"transition {transition.id} has invalid frame range")
+            if transition.targetType == "interactionGroup":
+                group = next(item for item in self.interactionGroups if item.id == transition.targetId)
+                boundaries = {group.range.start, *[item.frame for item in group.keyframes if item.generationBoundary]}
+                if transition.fromFrame not in boundaries or transition.toFrame not in boundaries:
+                    raise ValueError(f"transition {transition.id} must use action-group generation boundaries")
         return self
 
 
@@ -154,6 +201,8 @@ class GenerationRequest(BaseModel):
     transitionId: str
     adapter: str = "mock"
     parameters: dict[str, Any] = Field(default_factory=dict)
+    confirmationFingerprint: str | None = None
+    confirmDurationMismatch: bool = False
 
 
 class GenerationOutput(BaseModel):
@@ -181,3 +230,4 @@ class GenerationJob(BaseModel):
     message: str
     outputs: list[GenerationOutput] = Field(default_factory=list)
     error: GenerationError | None = None
+    requestFingerprint: str | None = None

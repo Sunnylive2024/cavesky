@@ -88,10 +88,11 @@
           "id": "KF_CHAR_024",
           "frame": 24,
           "image": "/source-assets/1b4c510fd9f9d72a461a04e7dc2a2834359bbbc9.jfif",
-          "mask": null,
+          "mask": "/generated-media/mask-SH001-CHAR_01-KF_CHAR_024-2b360509.png",
           "instruction": "Lina 坐着，右手空闲，视线看向杯子",
           "state": {
-            "rightHand": "free"
+            "rightHand": "free",
+            "maskSource": "manual"
           },
           "locked": true
         },
@@ -161,6 +162,7 @@
         "CHAR_01",
         "PROP_CUP_01"
       ],
+      "anchorKeyframeId": null,
       "range": {
         "start": 24,
         "end": 72
@@ -345,6 +347,46 @@
     },
     {
       "id": "GEN_8EF3F3559B",
+      "type": "transition",
+      "transitionId": "TR_PICKUP_CUP_01",
+      "targetId": "IG_PICKUP_CUP_01",
+      "adapter": "mock",
+      "outputs": [],
+      "status": "succeeded",
+      "message": "Mock adapter completed transition TR_PICKUP_CUP_01; no media was generated"
+    },
+    {
+      "id": "GEN_4D5D74CE4A",
+      "type": "transition",
+      "transitionId": "TR_PICKUP_CUP_01",
+      "targetId": "IG_PICKUP_CUP_01",
+      "adapter": "mock",
+      "outputs": [],
+      "status": "succeeded",
+      "message": "Mock adapter completed transition TR_PICKUP_CUP_01; no media was generated"
+    },
+    {
+      "id": "GEN_0130E71461",
+      "type": "transition",
+      "transitionId": "TR_PICKUP_CUP_01",
+      "targetId": "IG_PICKUP_CUP_01",
+      "adapter": "mock",
+      "outputs": [],
+      "status": "succeeded",
+      "message": "Mock adapter completed transition TR_PICKUP_CUP_01; no media was generated"
+    },
+    {
+      "id": "GEN_EDD3430566",
+      "type": "transition",
+      "transitionId": "TR_PICKUP_CUP_01",
+      "targetId": "IG_PICKUP_CUP_01",
+      "adapter": "mock",
+      "outputs": [],
+      "status": "succeeded",
+      "message": "Mock adapter completed transition TR_PICKUP_CUP_01; no media was generated"
+    },
+    {
+      "id": "GEN_878EF0A521",
       "type": "transition",
       "transitionId": "TR_PICKUP_CUP_01",
       "targetId": "IG_PICKUP_CUP_01",
