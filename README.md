@@ -4,7 +4,7 @@ CaveSky 是面向个人与小型创作团队的本地优先 AI 动画摄影棚�
 
 > 作者决定元素、关键状态和动作意图；AI 负责关键状态之间的自然过渡。
 
-当前第一阶段 Demo 是一个固定镜头：短发女性伸手拿起桌上的蓝色杯子。项目已经跑通关键帧生成、交互组、过渡视频、SAM 2.1 蒙版、生成历史和时间轴预览；下一项核心工作是接入“语言模型动作规划层”，把作者的一句话自动整理成少量可确认的关键状态。
+当前第一阶段已经跑通：语言模型动作规划、关键帧候选、Wan 2.7 I2V 整组过渡、SAM 2.1 动态蒙版、锁定背景合成、生成历史和时间轴预览。近期重点是整理编辑器前端工作流、确定性属性插值、导出和端到端验收。
 
 ## 先理解这套工作方式
 
@@ -19,7 +19,7 @@ CaveSky 不让视频模型重画整个镜头，而是把创作拆成可控制的
 7. SAM 2.1 将首帧蒙版传播成动态视频蒙版。
 8. 编辑器只把蒙版内的交互动画合成回锁定背景。
 
-完整原则见 [项目上下文](docs/PROJECT_CONTEXT.md)，镜头数据约束见 [镜头工程规范](docs/shot-project-spec-v0.1.md)，重要设计决定见 [docs/decisions](docs/decisions)。
+第一次接手请先阅读 [朋友接手与本地启动指南](docs/FRIEND_SETUP.md)。完整原则见 [项目上下文](docs/PROJECT_CONTEXT.md)，镜头数据约束见 [镜头工程规范](docs/shot-project-spec-v0.1.md)，重要设计决定见 [docs/decisions](docs/decisions)。
 
 ## 当前能力
 
@@ -31,6 +31,7 @@ CaveSky 不让视频模型重画整个镜头，而是把创作拆成可控制的
 - 人物与物品交互组及交互接管；
 - Wan 2.7 Image、Qwen Image 关键帧适配；
 - Wan 2.2 KF2V、Wan 2.7 I2V 过渡适配；
+- Qwen Flash 动作规划、48 帧默认动作范围、逐状态规划历史；
 - 生成候选历史、采用版本和刷新恢复；
 - SAM 2.1 Tiny 点选、排除点、画笔修正和撤销；
 - SAM 2.1 Tiny 短视频蒙版传播；
@@ -39,7 +40,7 @@ CaveSky 不让视频模型重画整个镜头，而是把创作拆成可控制的
 
 尚未完成：
 
-- 语言模型动作规划层；
+- 规划历史和尾帧工作流的前端可用性整理；
 - 元素位置、缩放、旋转等关键帧属性插值；
 - 稳定的视频导出与分层素材导出；
 - 完整的失败重试、取消和成本统计；
@@ -74,7 +75,7 @@ tests/                        后端测试
 - FFmpeg 和 FFprobe，且可从 `PATH` 调用；
 - Git。
 
-仅使用云端图像和视频模型时不需要高端显卡。本地 SAM 建议使用 NVIDIA GPU；当前 SAM 2.1 Tiny 已在 RTX 3060 6 GB 上验证，60 帧、320×180 代理蒙版传播约占 1 GB 显存。CPU 可以作为兼容路径，但速度会明显较慢。
+仅使用云端规划、图像和视频模型时不需要高端显卡。本地 SAM 建议使用 NVIDIA GPU；当前 SAM 2.1 Tiny 已在 RTX 3060 6 GB 上验证，60 帧、512×288 分块重叠传播可用。CPU 可以作为兼容路径，但速度会明显较慢。
 
 ## 首次安装
 
@@ -123,14 +124,20 @@ CAVESKY_ALIYUN_BASE_URL=https://你的业务空间域名.cn-beijing.maas.aliyunc
 CAVESKY_QWEN_API_KEY=你的关键帧模型Key
 CAVESKY_WAN_API_KEY=你的过渡视频模型Key
 CAVESKY_KEYFRAME_IMAGE_MODEL=wan2.7-image
-CAVESKY_WAN_VIDEO_MODEL=wan2.2-kf2v-flash
+CAVESKY_WAN_27_VIDEO_MODEL=wan2.7-i2v-2026-04-25
+
+CAVESKY_PLANNER_BASE_URL=https://你的业务空间域名.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+CAVESKY_PLANNER_API_KEY=你的动作规划Key
+CAVESKY_PLANNER_MODEL=qwen-flash
 ```
 
-`CAVESKY_ALIYUN_BASE_URL` 使用业务空间专属的 DashScope `/api/v1` 地址，不是 OpenAI 兼容 `/compatible-mode/v1` 地址。当前图像与视频 Adapter 按 DashScope 原生接口工作。
+图像和视频使用业务空间专属 DashScope `/api/v1` 地址；动作规划使用同一业务空间的 `/compatible-mode/v1` 地址。两种地址不能互换。
 
-可以让两个变量使用同一个 Key，也可以为图像和视频分别创建 Key。分开创建更方便统计额度和轮换。业务空间的含义是模型权限、额度、Key 和调用记录的隔离范围；Key 属于默认业务空间时，只需填写该空间对应的 Base URL 和 Key，不需要把“默认业务空间”文字写进请求。
+如果同一业务空间的 Key 拥有 `wan2.7-image`、`wan2.7-i2v-2026-04-25` 和 `qwen-flash` 权限，一个实际 Key 可以同时填入三个 Key 变量；也可以分开创建以便统计和轮换。业务空间是模型权限、额度、Key 和调用记录的隔离范围，不需要把“默认业务空间”文字写进请求。
 
 `.env` 会由后端加载，前端永远不应读取这些值。云端返回的临时媒体会立即缓存到 `work/generations/`，因此刷新页面后仍可查看已经付费生成的历史候选。
+
+`work/generations/` 被 Git 忽略。朋友克隆仓库后不会得到创建者本机已经付费生成的图片、视频和动态蒙版；镜头 JSON 中的历史媒体地址可能因此暂时不可用。团队如需共享示例结果，应另行提供经过许可的媒体包，而不是提交个人完整生成目录。
 
 ### 可选模型变量
 
@@ -144,17 +151,17 @@ CAVESKY_WAN_27_VIDEO_MODEL=wan2.7-i2v-2026-04-25
 
 模型 ID、权限和免费额度会变化，应以开发者自己业务空间的模型列表和控制台账单为准。测试真实调用前先使用低分辨率、最短片段，并确认请求只会生成一次。
 
-### 语言模型规划层的预留配置
+### 语言模型规划配置
 
-语言模型规划层尚未实现。负责该任务的开发者应新增供应商中立配置，不要复用或写死图像模型 Key：
+动作规划层已经接入 OpenAI-compatible Chat Completions。百炼需要使用业务空间的兼容地址：
 
 ```dotenv
-CAVESKY_PLANNER_BASE_URL=
-CAVESKY_PLANNER_API_KEY=
-CAVESKY_PLANNER_MODEL=
+CAVESKY_PLANNER_BASE_URL=https://你的业务空间域名.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+CAVESKY_PLANNER_API_KEY=你的Key
+CAVESKY_PLANNER_MODEL=qwen-flash
 ```
 
-推荐先支持 OpenAI-compatible Chat Completions 或 Responses 风格的适配器，再按需增加百炼原生适配器。密钥规则与图像、视频模型相同：仅后端可见。
+未配置云端 Planner 时仍可选择 `mock` 做无费用测试。密钥规则与图像、视频模型相同：仅后端可见。
 
 ## 启动项目
 
@@ -199,9 +206,9 @@ pnpm dev
 
 “尚未分层”表示当前只有云模型返回的完整视频，还没有动态蒙版。系统会阻止它直接覆盖锁定背景。
 
-## 语言模型动作规划层：交给接手者的核心任务
+## 语言模型动作规划层
 
-目标不是让语言模型代替导演，而是把作者的一句话变成少量、可编辑、可确认的拍摄计划。例如作者输入“女孩拿起杯子喝水”，规划层应建议：
+规划层已经实现。目标不是让语言模型代替导演，而是把作者的一句话变成少量、可追溯的关键状态。例如作者输入“女孩拿起杯子喝水”，规划层可以给出：
 
 ```text
 状态 1：右手接近杯把，杯子仍在桌面
@@ -210,39 +217,34 @@ pnpm dev
 状态 4：杯子贴近嘴唇，保持短暂饮水姿态
 ```
 
-实现要求：
+当前边界：
 
-- 输入包括作者意图、镜头时长/FPS、现有元素、元素有效区间、已有关键状态和交互组。
-- 输出必须是经过 Pydantic 校验的结构化“规划建议”，不能直接修改镜头。
-- 每个建议包含时间或帧号、涉及成员、关键状态短描述、动作过渡描述和是否需要交互组。
-- 默认生成 2–5 个有视觉差异的状态，避免逐帧描述和冗长提示词。
-- 接触建立、物体离开支撑面、交接、穿戴完成等拓扑变化应优先成为关键状态。
-- 规划层不得生成供应商专属参数，不得决定最终候选，也不得自动发起付费图像或视频调用。
-- 前端先显示计划草案，作者可以编辑、删除、调整时间并确认；确认后才写入关键帧和过渡任务。
-- 必须提供 `mock` Planner，测试无需 API Key、联网或消费额度。
-- 同一句输入和固定 mock 响应应得到可重复结果；无效 JSON、超时、限流和缺少 Key 必须返回可理解错误。
+- 锚点描述只表达当前可见状态，动作意图表达随后发生什么。
+- 后端在调用 Planner 前确定动作范围；普通动作默认 48 帧，作者可以调整。
+- Planner 返回经过 Pydantic 校验的状态、帧号、阶段、保持时间和连续性数据。
+- 原始请求、原始回复和解析结果写入不可变规划历史。
+- 应用规划只创建动作/互动组和描述节点，不会自动调用付费图片或视频模型。
+- 组尾是明确生成边界，作者生成候选并采用尾图后，才能提交 Wan。
+- `mock` Planner 无需 API Key、联网或费用，供测试使用。
 
-建议目录边界：
+目录边界：
 
 ```text
 cavesky/planning/              规划领域模型、Planner 接口、mock 和云端适配器
 cavesky/api.py                 只增加通用规划 API
-apps/editor/                   计划草案的查看、编辑与确认
+apps/editor/                   规划历史、动作组状态和作者确认
 tests/                         规划校验、失败路径和 API 测试
 docs/decisions/                如需改动镜头格式，先写 ADR
 ```
 
-建议 API：
+当前 API：
 
 ```text
-POST /api/action-plans           创建规划任务或同步生成草案
-GET  /api/action-plans/{id}      查询异步任务（若采用异步）
-POST /api/action-plans/{id}/apply  作者确认后应用计划
+GET  /api/planning-adapters      查询 mock 与云端 Planner 状态
+POST /api/action-groups          从锚点、动作意图和目标时长创建动作/互动组
 ```
 
-第一阶段验收用例：输入“女孩拿起蓝色杯子”，系统产生 3 个左右关键状态；作者能在 UI 中修改状态文字和帧号，确认后创建或更新一个人物＋杯子的交互组及其关键状态，但不会自动调用 Wan/Qwen。刷新后计划和已应用结果仍可追溯。
-
-详细拆分与优先级见 [任务看板](docs/TASKS.md) 中的 `PLAN-001`。
+当前待办是把原始 JSON 历史改成作者可读的逐帧时间表，并修正“从上一状态到当前状态”的过渡语义。详细拆分见 [任务看板](docs/TASKS.md) 中的 `UI-010`。
 
 ## 开发与验证
 
